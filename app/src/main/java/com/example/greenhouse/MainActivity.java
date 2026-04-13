@@ -22,5 +22,4 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    public String nama;
 }
