@@ -2,4 +2,10 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="primary_green">#3B6D11</color>
+    <color name="dark_grey">#212121</color>
+    <color name="light_green">#EAF3DE</color>
+    <color name="card_bg">#F7FAF2</color>
+    <color name="accent_orange">#C67C00</color>
+    <color name="input_stroke">#8BAA6F</color>
 </resources>
