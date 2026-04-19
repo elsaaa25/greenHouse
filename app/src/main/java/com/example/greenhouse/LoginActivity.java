@@ -1,5 +1,6 @@
 package com.example.greenhouse;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -37,18 +38,20 @@ public class LoginActivity extends AppCompatActivity {
                     if (email.isEmpty() || password.isEmpty()) {
                         Toast.makeText(LoginActivity.this, "Silakan isi email dan password", Toast.LENGTH_SHORT).show();
                     } else {
+                        // Di sini Anda bisa menambahkan logika untuk ke MainActivity setelah login sukses
                         Toast.makeText(LoginActivity.this, "Login Berhasil", Toast.LENGTH_SHORT).show();
                     }
                 }
             });
         }
 
-        // Logika teks Daftar
+        // Logika teks Daftar (Pindah ke RegistActivity)
         if (tvRegister != null) {
             tvRegister.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Toast.makeText(LoginActivity.this, "Navigasi ke halaman Daftar", Toast.LENGTH_SHORT).show();
+                    Intent intent = new Intent(LoginActivity.this, RegistActivity.class);
+                    startActivity(intent);
                 }
             });
         }
