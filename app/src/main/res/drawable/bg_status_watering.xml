@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Warna hijau pudar sesuai gambar -->
+    <solid android:color="#7EA061" />
+    <!-- Membuat sudut sangat melengkung (pill shape) -->
+    <corners android:radius="100dp" />
+</shape>
