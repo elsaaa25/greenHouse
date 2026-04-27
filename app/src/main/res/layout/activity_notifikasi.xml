@@ -120,12 +120,12 @@
                 android:padding="16dp">
 
                 <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:background="@drawable/bg_status_watering"
-                    android:padding="4dp"
-                    android:src="@android:drawable/checkbox_on_background"
-                    app:tint="@color/white" />
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:background="@drawable/bg_verified_rounded"
+                    android:padding="8dp"
+                    android:src="@drawable/ic_verified"
+                    app:tint="@null" />
 
                 <LinearLayout
                     android:layout_width="0dp"
@@ -168,12 +168,12 @@
                 android:padding="16dp">
 
                 <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:background="@drawable/bg_orange_rounded"
-                    android:padding="4dp"
-                    android:src="@android:drawable/checkbox_on_background"
-                    app:tint="@color/white" />
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:background="@drawable/bg_verified_rounded"
+                    android:padding="8dp"
+                    android:src="@drawable/ic_verified"
+                    app:tint="@null" />
 
                 <LinearLayout
                     android:layout_width="0dp"
