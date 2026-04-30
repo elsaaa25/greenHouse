@@ -12,7 +12,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.GreenHouse">
         <activity
-            android:name=".LoginActivity"
+            android:name=".HomeActivity"
             android:exported="false" />
         <activity
             android:name=".MainActivity"
