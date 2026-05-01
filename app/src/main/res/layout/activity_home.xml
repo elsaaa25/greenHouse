@@ -23,33 +23,36 @@
             <!-- Header Section -->
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="110dp"
                 android:background="@color/primary_green"
                 android:orientation="vertical"
-                android:padding="24dp">
+                android:paddingStart="20dp"
+                android:paddingEnd="10dp"
+                android:paddingTop="20dp"
+                android:paddingBottom="10dp">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Selamat datang di Planti"
                     android:textColor="@color/white"
-                    android:textSize="18sp" />
+                    android:textSize="18sp"
+                    android:layout_marginBottom="2dp"
+                    />
 
                 <LinearLayout
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
+                    android:layout_height="50dp"
+                    android:layout_marginTop="0dp"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 
                     <ImageView
-                        android:id="@+id/ivUserIcon"
                         android:layout_width="32dp"
                         android:layout_height="32dp"
-                        android:src="@drawable/ic_vegetable_pakcoy" />
+                        android:src="@drawable/ic_farmer" />
 
                     <TextView
-                        android:id="@+id/tvUserName"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="8dp"
@@ -70,7 +73,7 @@
                     android:id="@+id/cardPakcoy"
                     android:layout_width="match_parent"
                     android:layout_height="140dp"
-                    app:cardBackgroundColor="@color/card"
+                    app:cardBackgroundColor="@color/card_green"
                     app:cardCornerRadius="24dp"
                     app:cardElevation="0dp"
                     app:layout_constraintBottom_toBottomOf="parent"
@@ -81,7 +84,10 @@
                         android:layout_height="wrap_content"
                         android:layout_gravity="center_vertical"
                         android:orientation="vertical"
-                        android:padding="20dp">
+                        android:paddingStart="20dp"
+                        android:paddingEnd="10dp"
+                        android:paddingTop="10dp"
+                        android:paddingBottom="10dp">
 
                         <TextView
                             android:layout_width="wrap_content"
@@ -96,22 +102,24 @@
                             android:text="Pakcoy"
                             android:textColor="@color/white"
                             android:textSize="32sp"
-                            android:textStyle="bold" />
+                            android:textStyle="bold"
+                            android:layout_marginTop="4dp" />
 
                         <TextView
-                            android:layout_width="wrap_content"
+                            android:layout_width="140dp"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
-                            android:background="@drawable/bg_status_watering"
-                            android:paddingHorizontal="12dp"
-                            android:paddingVertical="4dp"
                             android:text="Sedang Menyiram"
                             android:textColor="@color/white"
-                            android:textSize="11sp" />
+                            android:textSize="12sp"
+                            android:gravity="center"
+
+                            android:background="@drawable/bg_status_watering"
+                            android:layout_marginTop="2dp"  />
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
 
                 <ImageView
+                    android:id="@+id/ivPlant"
                     android:layout_width="150dp"
                     android:layout_height="150dp"
                     android:src="@drawable/pakcoysawi"
@@ -131,7 +139,7 @@
                 android:textColor="@color/dark_grey"
                 android:textStyle="bold" />
 
-            <!-- Sensor Row 1: Suhu, Kelembapan, Status Alat -->
+            <!-- Sensor Grid Row 1 -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -152,10 +160,11 @@
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
                         android:padding="12dp">
+
                         <ImageView
                             android:layout_width="20dp"
                             android:layout_height="20dp"
-                            android:src="@drawable/ic_suhu" />
+                            android:src="@drawable/ic_temperature" />
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -168,7 +177,7 @@
                             android:layout_height="wrap_content"
                             android:text="27°"
                             android:textColor="@color/dark_grey"
-                            android:textSize="20sp"
+                            android:textSize="22sp"
                             android:textStyle="bold" />
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
@@ -202,7 +211,7 @@
                             android:layout_height="wrap_content"
                             android:text="60%"
                             android:textColor="@color/dark_grey"
-                            android:textSize="20sp"
+                            android:textSize="22sp"
                             android:textStyle="bold" />
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
@@ -222,8 +231,7 @@
                         <ImageView
                             android:layout_width="20dp"
                             android:layout_height="20dp"
-                            android:src="@drawable/ic_humidity" />
-
+                            android:src="@drawable/ic_pump" />
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -233,21 +241,21 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="On"
                             android:layout_marginTop="4dp"
+                            android:text="On"
                             android:textColor="@color/dark_grey"
-                            android:textSize="20sp"
+                            android:textSize="22sp"
                             android:textStyle="bold" />
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
             </LinearLayout>
 
-            <!-- Sensor Row 2: Lampu, Pompa Air -->
+            <!-- Row 2 Sensor -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="20dp"
-                android:layout_marginTop="12dp"
+                android:layout_marginTop="8dp"
                 android:orientation="horizontal">
 
                 <androidx.cardview.widget.CardView
@@ -258,30 +266,34 @@
                     app:cardBackgroundColor="@color/light_green"
                     app:cardCornerRadius="16dp"
                     app:cardElevation="0dp">
-                    <LinearLayout
+
+                    <RelativeLayout
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:padding="12dp">
+                        android:layout_height="match_parent"
+                        android:padding="16dp">
+
                         <ImageView
-                            android:layout_width="24dp"
-                            android:layout_height="24dp"
-                            android:layout_gravity="end"
-                            android:src="@drawable/ic_air" />
+                            android:layout_width="26dp"
+                            android:layout_height="26dp"
+                            android:layout_alignParentEnd="true"
+                            android:src="@drawable/ic_light" />
+
                         <TextView
+                            android:id="@+id/labelPompa"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Lampu"
-                            android:textSize="14sp"
                             android:textColor="@color/dark_grey" />
+
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:layout_below="@id/labelPompa"
                             android:text="Off"
                             android:textColor="@color/dark_grey"
                             android:textSize="24sp"
                             android:textStyle="bold" />
-                    </LinearLayout>
+                    </RelativeLayout>
                 </androidx.cardview.widget.CardView>
 
                 <androidx.cardview.widget.CardView
@@ -292,33 +304,33 @@
                     app:cardCornerRadius="16dp"
                     app:cardElevation="0dp">
 
-                    <LinearLayout
+                    <RelativeLayout
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
-                        android:orientation="vertical"
-                        android:padding="12dp">
+                        android:padding="16dp">
 
                         <ImageView
-                            android:layout_width="24dp"
-                            android:layout_height="24dp"
-                            android:layout_gravity="end"
-                            android:src="@drawable/ic_air" />
+                            android:layout_width="26dp"
+                            android:layout_height="26dp"
+                            android:layout_alignParentEnd="true"
+                            android:src="@drawable/ic_pump" />
 
                         <TextView
+                            android:id="@+id/labelPompa"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Pompa Air"
-                            android:textColor="@color/dark_grey"
-                            android:textSize="14sp" />
+                            android:textColor="@color/dark_grey" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:layout_below="@id/labelPompa"
                             android:text="On"
                             android:textColor="@color/dark_grey"
                             android:textSize="24sp"
                             android:textStyle="bold" />
-                    </LinearLayout>
+                    </RelativeLayout>
                 </androidx.cardview.widget.CardView>
             </LinearLayout>
 
@@ -339,40 +351,41 @@
                 app:cardBackgroundColor="@color/white"
                 app:cardCornerRadius="16dp"
                 app:cardElevation="2dp">
-
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:padding="16dp">
-
                     <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal">
-
                         <TextView
+                            android:id="@+id/tvTabSuhu"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:background="@drawable/bg_notif_warning"
+                            android:background="@drawable/bg_chart_tab_selector"
+                            android:textColor="@color/color_chart_tab_text"
                             android:paddingHorizontal="12dp"
                             android:paddingVertical="4dp"
                             android:text="Suhu"
-                            android:textColor="@color/accent_orange"
-                            android:textSize="12sp" />
-
+                            android:textSize="12sp"
+                            android:clickable="true"
+                            android:focusable="true"/>
                         <TextView
+                            android:id="@+id/tvTabKelembapan"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="12dp"
-                            android:background="@drawable/bg_notif_warning"
+                            android:background="@drawable/bg_chart_tab_selector"
+                            android:textColor="@color/color_chart_tab_text"
                             android:paddingHorizontal="12dp"
                             android:paddingVertical="4dp"
                             android:text="Kelembapan"
-                            android:textColor="@color/accent_orange"
-                            android:textSize="12sp" />
+                            android:textSize="12sp"
+                            android:clickable="true"
+                            android:focusable="true"/>
                     </LinearLayout>
-
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -380,21 +393,17 @@
                         android:text="Data harian minggu ini"
                         android:textColor="@color/dark_grey"
                         android:textSize="12sp" />
-
-                    <!-- Placeholder for Line Chart -->
                     <View
                         android:layout_width="match_parent"
-                        android:layout_height="200dp"
+                        android:layout_height="180dp"
                         android:layout_marginTop="16dp"
-                        android:background="@android:color/transparent" />
-
+                        android:background="#F9F9F9" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
-
         </LinearLayout>
     </ScrollView>
 
-    <!-- Bottom Navigation Bar -->
+    <!-- Navigation -->
     <LinearLayout
         android:id="@+id/bottomNav"
         android:layout_width="match_parent"
@@ -403,77 +412,21 @@
         android:gravity="center"
         android:orientation="horizontal"
         app:layout_constraintBottom_toBottomOf="parent">
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:orientation="vertical">
-            <ImageView
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:src="@android:drawable/ic_menu_gallery" />
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Beranda"
-                android:textColor="@color/white"
-                android:textSize="10sp" />
+        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:orientation="vertical">
+            <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@android:drawable/ic_menu_gallery" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Beranda" android:textColor="@color/white" android:textSize="10sp" />
         </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:orientation="vertical">
-            <ImageView
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:src="@android:drawable/ic_menu_gallery" />
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Grafik"
-                android:textColor="@color/white"
-                android:textSize="10sp" />
+        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:orientation="vertical">
+            <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@android:drawable/ic_menu_gallery" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Grafik" android:textColor="@color/white" android:textSize="10sp" />
         </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:orientation="vertical">
-            <ImageView
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:src="@android:drawable/ic_menu_gallery" />
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Notifikasi"
-                android:textColor="@color/white"
-                android:textSize="10sp" />
+        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:orientation="vertical">
+            <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@android:drawable/ic_menu_gallery" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Notifikasi" android:textColor="@color/white" android:textSize="10sp" />
         </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:orientation="vertical">
-            <ImageView
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:src="@android:drawable/ic_menu_gallery" />
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Profil"
-                android:textColor="@color/white"
-                android:textSize="10sp" />
+        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:orientation="vertical">
+            <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@android:drawable/ic_menu_gallery" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Profil" android:textColor="@color/white" android:textSize="10sp" />
         </LinearLayout>
     </LinearLayout>
 

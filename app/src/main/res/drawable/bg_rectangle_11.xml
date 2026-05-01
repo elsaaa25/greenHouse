@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <shape xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Warna hijau sesuai dengan gambar -->
+    <!-- Warna Latar Belakang -->
     <solid android:color="#7EA061" />
-
-    <!-- Membuat sudut melengkung sempurna (kapsul) -->
+    <!-- Border / Garis Tepi -->
+    <stroke
+        android:width="1dp"
+        android:color="#5E7A45" />
+    <!-- Sudut Melengkung -->
     <corners android:radius="100dp" />
-
-    <!-- Jika ingin menambahkan padding agar teks tidak terlalu menempel ke pinggir -->
     <padding
         android:left="12dp"
         android:top="4dp"
