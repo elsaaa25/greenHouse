@@ -12,6 +12,12 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.GreenHouse">
         <activity
+            android:name=".AccountUserActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ProfileActivity"
+            android:exported="false" />
+        <activity
             android:name=".LoginActivity"
             android:exported="false" />
         <activity
