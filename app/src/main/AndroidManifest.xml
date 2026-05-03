@@ -12,7 +12,6 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.GreenHouse">
 
-        <!-- LoginActivity sebagai halaman pertama saat aplikasi dibuka -->
         <activity
             android:name=".NotifikasiActivity"
             android:exported="true">
@@ -22,25 +21,10 @@
             </intent-filter>
         </activity>
 
-<!--&lt;!&ndash;        <activity&ndash;&gt;-->
-<!--            android:name=".RegistActivity"-->
-<!--            android:exported="false" />-->
-
-<!--        <activity-->
-<!--            android:name=".LoadingActivity"-->
-<!--            android:exported="false" />-->
-
-<!--        <activity-->
-<!--            android:name=".BerandaActivity"-->
-<!--            android:exported="false" />-->
 
         <activity
             android:name=".MainActivity"
             android:exported="false" />
-
-<!--        <meta-data-->
-<!--            android:name="preloaded_fonts"-->
-<!--            android:resource="@array/preloaded_fonts" />-->
 
     </application>
 
