@@ -269,6 +269,7 @@
         app:layout_constraintBottom_toBottomOf="parent">
 
         <LinearLayout
+            android:id="@+id/navBeranda"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -288,6 +289,7 @@
         </LinearLayout>
 
         <LinearLayout
+            android:id="@+id/navGrafik"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -307,6 +309,7 @@
         </LinearLayout>
 
         <LinearLayout
+            android:id="@+id/navNotifikasi"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -326,6 +329,7 @@
         </LinearLayout>
 
         <LinearLayout
+            android:id="@+id/navProfil"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"

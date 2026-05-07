@@ -28,5 +28,10 @@ public class ProfileActivity extends AppCompatActivity {
             Intent intent = new Intent(ProfileActivity.this, AccountUserActivity.class);
             startActivity(intent);
         });
+
+        findViewById(R.id.navGrafik).setOnClickListener(v -> {
+            Intent intent = new Intent(ProfileActivity.this, GraphActivity.class);
+            startActivity(intent);
+        });
     }
 }
