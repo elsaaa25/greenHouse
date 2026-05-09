@@ -8,6 +8,8 @@ import androidx.fragment.app.FragmentTransaction;
 import com.example.greenhouse.R;
 import com.example.greenhouse.databinding.ActivityMainBinding;
 import com.example.greenhouse.fragment.GraphFragment;
+import com.example.greenhouse.fragment.HomeFragment;
+import com.example.greenhouse.fragment.NotifikasiFragment;
 import com.example.greenhouse.fragment.ProfileFragment;
 
 public class BottomNavigasi {
@@ -21,16 +23,16 @@ public class BottomNavigasi {
 
     public void setup() {
         // Set default fragment
-        replaceFragment(new ProfileFragment());
+        replaceFragment(new HomeFragment());
 
         binding.bottomNavigationView.setOnItemSelectedListener(item -> {
             int itemId = item.getItemId();
             if (itemId == R.id.home) {
-                replaceFragment(new GraphFragment());
+                replaceFragment(new HomeFragment());
             } else if (itemId == R.id.grafik) {
                 replaceFragment(new GraphFragment());
             } else if (itemId == R.id.notifikasi) {
-                replaceFragment(new ProfileFragment());
+                replaceFragment(new NotifikasiFragment());
             } else if (itemId == R.id.profil) {
                 replaceFragment(new ProfileFragment());
             }

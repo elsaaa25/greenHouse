@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/light_green"
+    android:background="@color/green_bg"
     tools:context=".activity.LoginActivity">
 
     <!-- Logo Section -->
@@ -45,7 +45,7 @@
             android:layout_gravity="center"
             android:fontFamily="@font/krona_one"
             android:text="Login"
-            android:textColor="@color/dark_grey"
+            android:textColor="@color/gray_dark"
             android:textSize="32sp"
             android:textStyle="bold"
             tools:fontFamily="@font/krona_one" />
@@ -55,7 +55,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
             android:text="Email"
-            android:textColor="@color/dark_grey"
+            android:textColor="@color/gray_dark"
             android:textSize="14sp"
             tools:fontFamily="@font/poppins" />
 
@@ -76,7 +76,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:text="Password"
-            android:textColor="@color/dark_grey"
+            android:textColor="@color/gray_dark"
             android:textSize="14sp"
             tools:fontFamily="@font/poppins" />
 
@@ -115,7 +115,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Belum punya akun? "
-                android:textColor="@color/dark_grey"
+                android:textColor="@color/gray_dark"
                 android:textSize="13sp"
                 tools:fontFamily="@font/poppins" />
 
@@ -124,7 +124,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Daftar"
-                android:textColor="@color/accent_orange"
+                android:textColor="@color/orange_alert"
                 android:textSize="13sp"
                 android:textStyle="bold"
                 tools:fontFamily="@font/poppins" />

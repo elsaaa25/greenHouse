@@ -9,10 +9,13 @@
     tools:context=".activity.BottomNavigasi">
 
     <!-- Header -->
+
+
+
     <View
         android:id="@+id/headerBackground"
         android:layout_width="match_parent"
-        android:layout_height="120dp"
+        android:layout_height="110dp"
         android:background="#3E6917"
         app:layout_constraintTop_toTopOf="parent" />
 

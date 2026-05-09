@@ -1,13 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Primary Colors -->
+    <color name="green_cardbg">#45553D</color>
     <color name="green_dark">#1B5E20</color>
-    <color name="green_primary">#2E7D32</color>
+    <color name="green_primary">#3B6D11</color>
     <color name="green_secondary">#3E6917</color>
     <color name="green_medium">#388E3C</color>
     <color name="green_light">#4CAF50</color>
     <color name="green_pale">#A5D6A7</color>
-    <color name="green_bg">#C8E6C9</color>
+    <color name="green_bg">#EAF3DE</color>
+
+    <!-- Missing colors referenced in layouts -->
+    <color name="primary_green">#3B6D11</color>
+    <color name="dark_grey">#424242</color>
+    <color name="accent_orange">#FF6D00</color>
+    <color name="notif_bg_gray">#F5F5F5</color>
+    <color name="notif_bg_green_light">#EAF3DE</color>
+    <color name="warning_border">#FFD600</color>
 
     <!-- Alert Colors -->
     <color name="orange_alert">#E65100</color>
@@ -34,4 +43,5 @@
     <color name="colorBackground">#F5F5F5</color>
     <color name="colorSurface">#FFFFFF</color>
     <color name="colorError">#B00020</color>
+    <color name="card_bg">#F5F9F0</color>
 </resources>

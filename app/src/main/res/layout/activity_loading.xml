@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/light_green"
+    android:background="@color/green_bg"
     android:padding="24dp">
 
     <TextView
@@ -15,7 +15,7 @@
         android:fontFamily="@font/krona_one"
         android:gravity="center"
         android:text="Tanaman\nBudidaya"
-        android:textColor="@color/dark_grey"
+        android:textColor="@color/gray_dark"
         android:textSize="36sp"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
@@ -30,7 +30,7 @@
         android:fontFamily="@font/poppins"
         android:gravity="center"
         android:text="Pilih satu tanaman yang akan\nkamu budidaya"
-        android:textColor="@color/dark_grey"
+        android:textColor="@color/gray_dark"
         android:textSize="14sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -45,7 +45,7 @@
         android:hint="Cari nama tanaman"
         android:paddingHorizontal="16dp"
         android:drawableEnd="@android:drawable/ic_menu_search"
-        android:drawableTint="@color/primary_green"
+        android:drawableTint="@color/green_primary"
         android:textSize="14sp"
         app:layout_constraintTop_toBottomOf="@id/tvSubtitle" />
 
@@ -89,7 +89,7 @@
                     android:layout_marginTop="8dp"
                     android:text="Pakcoy"
                     android:textStyle="bold"
-                    android:textColor="@color/dark_grey" />
+                    android:textColor="@color/gray_dark" />
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -129,7 +129,7 @@
                     android:layout_marginTop="8dp"
                     android:text="Tomat"
                     android:textStyle="bold"
-                    android:textColor="@color/dark_grey" />
+                    android:textColor="@color/gray_dark" />
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
@@ -163,7 +163,7 @@
                     android:layout_marginTop="8dp"
                     android:text="Cabai"
                     android:textStyle="bold"
-                    android:textColor="@color/dark_grey" />
+                    android:textColor="@color/gray_dark" />
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
@@ -197,7 +197,7 @@
                     android:layout_marginTop="8dp"
                     android:text="Wortel"
                     android:textStyle="bold"
-                    android:textColor="@color/dark_grey" />
+                    android:textColor="@color/gray_dark" />
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
@@ -214,6 +214,7 @@
         android:textColor="@color/white"
         android:textSize="16sp"
         android:textStyle="bold"
-        app:layout_constraintBottom_toBottomOf="parent" />
+        app:layout_constraintBottom_toBottomOf="parent"
+        tools:layout_editor_absoluteX="24dp" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

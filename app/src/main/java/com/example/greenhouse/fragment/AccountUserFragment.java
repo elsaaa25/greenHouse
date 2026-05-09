@@ -23,6 +23,8 @@ import androidx.fragment.app.Fragment;
 import static android.app.Activity.RESULT_OK;
 
 import com.example.greenhouse.R;
+import com.example.greenhouse.activity.MainActivity;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class AccountUserFragment extends Fragment {
 
@@ -36,9 +38,11 @@ public class AccountUserFragment extends Fragment {
             result -> {
                 if (result.getResultCode() == RESULT_OK && result.getData() != null) {
                     Uri imageUri = result.getData().getData();
-                    ivProfileImage.setImageURI(imageUri);
-                    ivProfileImage.setVisibility(View.VISIBLE);
-                    tvProfilePlaceholder.setVisibility(View.GONE);
+                    if (imageUri != null) {
+                        ivProfileImage.setImageURI(imageUri);
+                        ivProfileImage.setVisibility(View.VISIBLE);
+                        tvProfilePlaceholder.setVisibility(View.GONE);
+                    }
                 }
             }
     );
@@ -53,6 +57,9 @@ public class AccountUserFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        // Sembunyikan Bottom Navigation saat fragment ini ditampilkan
+        toggleBottomNavigation(false);
+
         // Initialize Views
         ivProfileImage = view.findViewById(R.id.ivProfileImage);
         tvProfilePlaceholder = view.findViewById(R.id.tvProfilePlaceholder);
@@ -65,11 +72,14 @@ public class AccountUserFragment extends Fragment {
         Button btnCancel = view.findViewById(R.id.btnCancel);
 
         // Back Navigation
-        btnBack.setOnClickListener(v -> {
-            if (getParentFragmentManager().getBackStackEntryCount() > 0) {
-                getParentFragmentManager().popBackStack();
+        View.OnClickListener goBackListener = v -> {
+            if (getActivity() != null) {
+                getActivity().getOnBackPressedDispatcher().onBackPressed();
             }
-        });
+        };
+        
+        btnBack.setOnClickListener(goBackListener);
+        btnCancel.setOnClickListener(goBackListener);
 
         // Image Selection
         View.OnClickListener pickImageListener = v -> {
@@ -77,7 +87,11 @@ public class AccountUserFragment extends Fragment {
             imagePickerLauncher.launch(intent);
         };
         profileImageCard.setOnClickListener(pickImageListener);
-        view.findViewById(R.id.tvTapToChange).setOnClickListener(pickImageListener);
+        
+        TextView tvTapToChange = view.findViewById(R.id.tvTapToChange);
+        if (tvTapToChange != null) {
+            tvTapToChange.setOnClickListener(pickImageListener);
+        }
 
         // Validation & Save
         btnSaveChanges.setOnClickListener(v -> {
@@ -88,16 +102,26 @@ public class AccountUserFragment extends Fragment {
                 tvWarning.setVisibility(View.VISIBLE);
             } else {
                 tvWarning.setVisibility(View.GONE);
-                if (getParentFragmentManager().getBackStackEntryCount() > 0) {
-                    getParentFragmentManager().popBackStack();
+                if (getActivity() != null) {
+                    getActivity().getOnBackPressedDispatcher().onBackPressed();
                 }
             }
         });
+    }
 
-        btnCancel.setOnClickListener(v -> {
-            if (getParentFragmentManager().getBackStackEntryCount() > 0) {
-                getParentFragmentManager().popBackStack();
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        // Tampilkan kembali Bottom Navigation saat fragment ini ditutup
+        toggleBottomNavigation(true);
+    }
+
+    private void toggleBottomNavigation(boolean show) {
+        if (getActivity() instanceof MainActivity) {
+            BottomNavigationView bottomNav = getActivity().findViewById(R.id.bottomNavigationView);
+            if (bottomNav != null) {
+                bottomNav.setVisibility(show ? View.VISIBLE : View.GONE);
             }
-        });
+        }
     }
 }
