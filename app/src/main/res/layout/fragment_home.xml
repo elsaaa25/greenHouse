@@ -132,7 +132,7 @@
                     android:layout_height="240dp"
                     android:translationY="-45dp"
                     android:translationX="37dp"
-                     android:rotation="15"
+                    android:rotation="15"
                     android:src="@drawable/pakcoy"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
