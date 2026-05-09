@@ -1,35 +1,32 @@
 package com.example.greenhouse;
 
-import android.content.Intent;
-import android.os.Bundle;
-import android.view.View;
-import android.widget.Button;
-
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
+import android.os.Bundle;
+import com.example.greenhouse.databinding.ActivityMainBinding;
 
-/**
- * MainActivity berfungsi sebagai entry point.
- * Di sini kita langsung mengarahkan user ke LoginActivity.
- */
 public class MainActivity extends AppCompatActivity {
 
-    private Button btnGoToProfile;
+    private ActivityMainBinding binding;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        binding = ActivityMainBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
 
-        // Inisialisasi tombol berdasarkan Profile Activity ID yang ada di XML
-        btnGoToProfile = findViewById(R.id.goToProfile);
+        // Inisialisasi dan setup Bottom Navigation
+        BottomNavigasi bottomNavigasi = new BottomNavigasi(this, binding);
+        bottomNavigasi.setup();
+    }
 
-        // Memberikan logika saat tombol ditekan
-        btnGoToProfile.setOnClickListener(new View.OnClickListener() {
-           @Override
-           public void onClick(View v) {
-//              Berpindah ke ProfileActivity
-            Intent intent = new Intent(MainActivity.this, ProfileActivity.class);
-            startActivity(intent);
-            }
-        });
+    /**
+     * Metode untuk memuat Fragment ke dalam frame_layout
+     */
+    public void loadFragment(Fragment fragment) {
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.frame_layout, fragment)
+                .addToBackStack(null) // Agar bisa kembali ke fragment sebelumnya dengan tombol back
+                .commit();
     }
 }

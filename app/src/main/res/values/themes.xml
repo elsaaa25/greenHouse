@@ -1,9 +1,16 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
     <style name="Base.Theme.GreenHouse" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+        <item name="colorPrimary">@color/green_dark</item>
+        <item name="colorSecondaryContainer">@color/white</item>
     </style>
 
     <style name="Theme.GreenHouse" parent="Base.Theme.GreenHouse" />
+
+    <!-- Perbaikan: Ukuran indikator dikurangi agar tidak menutupi teks -->
+    <style name="App.Custom.Indicator" parent="Widget.Material3.BottomNavigationView.ActiveIndicator">
+        <item name="android:color">@color/white</item>
+        <item name="android:width">48dp</item>
+        <item name="android:height">32dp</item>
+    </style>
 </resources>

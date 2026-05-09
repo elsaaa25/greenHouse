@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Saat dipilih: Ikon jadi Hijau Tua agar terlihat kontras di atas lingkaran putih -->
+    <item android:color="@color/green_dark" android:state_checked="true" />
+    <!-- Saat tidak dipilih: Ikon berwarna Putih -->
+    <item android:color="@color/white" />
+</selector>
