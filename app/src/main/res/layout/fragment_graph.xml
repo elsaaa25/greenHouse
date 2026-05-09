@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#FFFFFF"
-    tools:context=".GraphActivity">
+    tools:context=".activity.BottomNavigasi">
 
     <!-- Header -->
     <View
@@ -76,7 +76,7 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginTop="16dp"
-        app:layout_constraintBottom_toTopOf="@id/bottomNavigation"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toBottomOf="@id/filterContainer">
 
         <LinearLayout
@@ -111,8 +111,6 @@
                     android:layout_height="match_parent"
                     android:padding="16dp">
 
-                    <!-- Y-Axis labels -->
-                    <!-- Y-Axis labels -->
                     <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="match_parent"
@@ -127,13 +125,11 @@
                         <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0" android:textSize="12sp" />
                     </LinearLayout>
 
-                    <!-- Grid lines (simplified) -->
                     <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#EEEEEE" android:layout_alignParentTop="true" android:layout_marginTop="10dp" android:layout_marginStart="30dp"/>
                     <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#EEEEEE" android:layout_centerVertical="true" android:layout_marginStart="30dp"/>
                     <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#000000" android:layout_alignParentBottom="true" android:layout_marginBottom="55dp" android:layout_marginStart="30dp"/>
 
-                    <!-- Line Chart Container -->
-                    <com.example.greenhouse.LineChartView
+                    <com.example.greenhouse.fragment.LineChartView
                         android:id="@+id/lineChartSuhu"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
@@ -142,7 +138,6 @@
                         android:paddingStart="20dp"
                         android:paddingEnd="20dp" />
 
-                    <!-- Labels Container -->
                     <LinearLayout
                         android:id="@+id/labelsSuhu"
                         android:layout_width="match_parent"
@@ -153,7 +148,6 @@
                         android:orientation="horizontal">
                     </LinearLayout>
 
-                    <!-- Legend -->
                     <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -167,7 +161,6 @@
                 </RelativeLayout>
             </androidx.cardview.widget.CardView>
 
-            <!-- Data Sensor Kelembapan -->
             <TextView
                 android:id="@+id/tvLabelKelembapan"
                 android:layout_width="wrap_content"
@@ -200,8 +193,7 @@
                     <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#EEEEEE" android:layout_centerVertical="true" android:layout_marginStart="30dp"/>
                     <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#000000" android:layout_alignParentBottom="true" android:layout_marginBottom="55dp" android:layout_marginStart="30dp"/>
 
-                    <!-- Line Chart Container -->
-                    <com.example.greenhouse.LineChartView
+                    <com.example.greenhouse.fragment.LineChartView
                         android:id="@+id/lineChartKelembapan"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
@@ -210,7 +202,6 @@
                         android:paddingStart="20dp"
                         android:paddingEnd="20dp" />
 
-                    <!-- Labels Container -->
                     <LinearLayout
                         android:id="@+id/labelsKelembapan"
                         android:layout_width="match_parent"
@@ -236,97 +227,5 @@
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
-
-    <!-- Bottom Navigation -->
-    <LinearLayout
-        android:id="@+id/bottomNavigation"
-        android:layout_width="match_parent"
-        android:layout_height="70dp"
-        android:background="#3E6917"
-        android:gravity="center"
-        android:orientation="horizontal"
-        app:layout_constraintBottom_toBottomOf="parent">
-
-        <LinearLayout
-            android:id="@+id/navBeranda"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:orientation="vertical">
-            <ImageView
-                android:layout_width="28dp"
-                android:layout_height="28dp"
-                android:src="@android:drawable/ic_menu_today"
-                app:tint="#A5D6A7" />
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Beranda"
-                android:textColor="#A5D6A7"
-                android:textSize="12sp" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/navGrafik"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:orientation="vertical">
-            <ImageView
-                android:layout_width="28dp"
-                android:layout_height="28dp"
-                android:src="@android:drawable/ic_menu_sort_by_size"
-                app:tint="#FFFFFF" />
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Grafik"
-                android:textColor="#FFFFFF"
-                android:textSize="12sp" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/navNotifikasi"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:orientation="vertical">
-            <ImageView
-                android:layout_width="28dp"
-                android:layout_height="28dp"
-                android:src="@android:drawable/ic_popup_reminder"
-                app:tint="#A5D6A7" />
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Notifikasi"
-                android:textColor="#A5D6A7"
-                android:textSize="12sp" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/navProfil"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:orientation="vertical">
-            <ImageView
-                android:layout_width="28dp"
-                android:layout_height="28dp"
-                android:src="@android:drawable/ic_menu_mylocation"
-                app:tint="#A5D6A7" />
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Profil"
-                android:textColor="#A5D6A7"
-                android:textSize="12sp" />
-        </LinearLayout>
-
-    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

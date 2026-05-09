@@ -1,65 +1,63 @@
-package com.example.greenhouse;
+package com.example.greenhouse.fragment;
 
 import android.os.Bundle;
 import android.view.Gravity;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import androidx.activity.EdgeToEdge;
-import androidx.appcompat.app.AppCompatActivity;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
+import androidx.fragment.app.Fragment;
 
-public class GraphActivity extends AppCompatActivity {
+import com.example.greenhouse.R;
+
+public class GraphFragment extends Fragment {
 
     private TextView btnMinggu, btnBulan;
     private LineChartView lineChartSuhu, lineChartKelembapan;
     private LinearLayout labelsSuhu, labelsKelembapan;
 
+    @Nullable
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
-        setContentView(R.layout.activity_graph);
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.fragment_graph, container, false);
+    }
 
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
-        });
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
 
-        btnMinggu = findViewById(R.id.btnMinggu);
-        btnBulan = findViewById(R.id.btnBulan);
-        lineChartSuhu = findViewById(R.id.lineChartSuhu);
-        lineChartKelembapan = findViewById(R.id.lineChartKelembapan);
-        labelsSuhu = findViewById(R.id.labelsSuhu);
-        labelsKelembapan = findViewById(R.id.labelsKelembapan);
+        btnMinggu = view.findViewById(R.id.btnMinggu);
+        btnBulan = view.findViewById(R.id.btnBulan);
+        lineChartSuhu = view.findViewById(R.id.lineChartSuhu);
+        lineChartKelembapan = view.findViewById(R.id.lineChartKelembapan);
+        labelsSuhu = view.findViewById(R.id.labelsSuhu);
+        labelsKelembapan = view.findViewById(R.id.labelsKelembapan);
 
         btnMinggu.setOnClickListener(v -> selectMinggu());
         btnBulan.setOnClickListener(v -> selectBulan());
 
         // Default: Minggu
         selectMinggu();
-
-        // Bottom Nav logic
-        findViewById(R.id.navProfil).setOnClickListener(v -> finish());
     }
 
     private void selectMinggu() {
         btnMinggu.setBackgroundResource(R.drawable.bg_filter_selected);
-        btnMinggu.setTextColor(ContextCompat.getColor(this, android.R.color.white));
+        btnMinggu.setTextColor(ContextCompat.getColor(requireContext(), android.R.color.white));
         btnBulan.setBackgroundResource(R.drawable.bg_filter_unselected);
-        btnBulan.setTextColor(ContextCompat.getColor(this, R.color.green_secondary));
+        btnBulan.setTextColor(ContextCompat.getColor(requireContext(), R.color.green_secondary));
 
         updateCharts("minggu");
     }
 
     private void selectBulan() {
         btnBulan.setBackgroundResource(R.drawable.bg_filter_selected);
-        btnBulan.setTextColor(ContextCompat.getColor(this, android.R.color.white));
+        btnBulan.setTextColor(ContextCompat.getColor(requireContext(), android.R.color.white));
         btnMinggu.setBackgroundResource(R.drawable.bg_filter_unselected);
-        btnMinggu.setTextColor(ContextCompat.getColor(this, R.color.green_secondary));
+        btnMinggu.setTextColor(ContextCompat.getColor(requireContext(), R.color.green_secondary));
 
         updateCharts("bulan");
     }
@@ -93,7 +91,8 @@ public class GraphActivity extends AppCompatActivity {
     }
 
     private void addLabel(LinearLayout container, String label) {
-        TextView tv = new TextView(this);
+        if (getContext() == null) return;
+        TextView tv = new TextView(getContext());
         tv.setText(label);
         tv.setTextSize(10);
         tv.setGravity(Gravity.CENTER);

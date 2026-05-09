@@ -1,26 +1,30 @@
-package com.example.greenhouse;
+package com.example.greenhouse.fragment;
 
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import androidx.activity.EdgeToEdge;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.appcompat.app.AppCompatActivity;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.cardview.widget.CardView;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
+import androidx.fragment.app.Fragment;
 
-public class AccountUserActivity extends AppCompatActivity {
+import static android.app.Activity.RESULT_OK;
+
+import com.example.greenhouse.R;
+
+public class AccountUserFragment extends Fragment {
 
     private ImageView ivProfileImage;
     private TextView tvProfilePlaceholder;
@@ -39,31 +43,33 @@ public class AccountUserActivity extends AppCompatActivity {
             }
     );
 
+    @Nullable
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
-        setContentView(R.layout.activity_account_user);
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.fragment_account_user, container, false);
+    }
 
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
-        });
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
 
         // Initialize Views
-        ivProfileImage = findViewById(R.id.ivProfileImage);
-        tvProfilePlaceholder = findViewById(R.id.tvProfilePlaceholder);
-        tvWarning = findViewById(R.id.tvWarning);
-        etOldPassword = findViewById(R.id.etOldPassword);
-        etNewPassword = findViewById(R.id.etNewPassword);
-        ImageButton btnBack = findViewById(R.id.btnBack);
-        CardView profileImageCard = findViewById(R.id.profileImageCard);
-        Button btnSaveChanges = findViewById(R.id.btnSaveChanges);
-        Button btnCancel = findViewById(R.id.btnCancel);
+        ivProfileImage = view.findViewById(R.id.ivProfileImage);
+        tvProfilePlaceholder = view.findViewById(R.id.tvProfilePlaceholder);
+        tvWarning = view.findViewById(R.id.tvWarning);
+        etOldPassword = view.findViewById(R.id.etOldPassword);
+        etNewPassword = view.findViewById(R.id.etNewPassword);
+        ImageButton btnBack = view.findViewById(R.id.btnBack);
+        CardView profileImageCard = view.findViewById(R.id.profileImageCard);
+        Button btnSaveChanges = view.findViewById(R.id.btnSaveChanges);
+        Button btnCancel = view.findViewById(R.id.btnCancel);
 
         // Back Navigation
-        btnBack.setOnClickListener(v -> finish());
+        btnBack.setOnClickListener(v -> {
+            if (getParentFragmentManager().getBackStackEntryCount() > 0) {
+                getParentFragmentManager().popBackStack();
+            }
+        });
 
         // Image Selection
         View.OnClickListener pickImageListener = v -> {
@@ -71,7 +77,7 @@ public class AccountUserActivity extends AppCompatActivity {
             imagePickerLauncher.launch(intent);
         };
         profileImageCard.setOnClickListener(pickImageListener);
-        findViewById(R.id.tvTapToChange).setOnClickListener(pickImageListener);
+        view.findViewById(R.id.tvTapToChange).setOnClickListener(pickImageListener);
 
         // Validation & Save
         btnSaveChanges.setOnClickListener(v -> {
@@ -82,13 +88,16 @@ public class AccountUserActivity extends AppCompatActivity {
                 tvWarning.setVisibility(View.VISIBLE);
             } else {
                 tvWarning.setVisibility(View.GONE);
-                // Logika simpan: Di sini kita hanya kembali ke profil.
-                // Data sebelumnya di halaman profil tidak akan berubah karena kita tidak mengirim data balik atau menyimpannya di DB/SharedPrefs.
-                // Ini sesuai permintaan: "ikon info akun ditekan, maka masih menampilkan data sebelumnya"
-                finish();
+                if (getParentFragmentManager().getBackStackEntryCount() > 0) {
+                    getParentFragmentManager().popBackStack();
+                }
             }
         });
 
-        btnCancel.setOnClickListener(v -> finish());
+        btnCancel.setOnClickListener(v -> {
+            if (getParentFragmentManager().getBackStackEntryCount() > 0) {
+                getParentFragmentManager().popBackStack();
+            }
+        });
     }
 }
