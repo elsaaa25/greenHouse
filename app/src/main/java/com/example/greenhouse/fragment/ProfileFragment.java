@@ -9,16 +9,15 @@ import androidx.annotation.Nullable;
 import androidx.cardview.widget.CardView;
 import androidx.fragment.app.Fragment;
 
-import com.example.greenhouse.AccountUserActivity;
-import com.example.greenhouse.MainActivity;
+import com.example.greenhouse.activity.MainActivity;
 import com.example.greenhouse.R;
 
-public class ProfileActivity extends Fragment {
+public class ProfileFragment extends Fragment {
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.activity_profile, container, false);
+        return inflater.inflate(R.layout.fragment_profile, container, false);
     }
 
     @Override
@@ -28,7 +27,7 @@ public class ProfileActivity extends Fragment {
         CardView cardInfoAkun = view.findViewById(R.id.cardInfoAkun);
         cardInfoAkun.setOnClickListener(v -> {
             if (getActivity() instanceof MainActivity) {
-                ((MainActivity) getActivity()).loadFragment(new AccountUserActivity());
+                ((MainActivity) getActivity()).loadFragment(new AccountUserFragment());
             }
         });
     }

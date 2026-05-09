@@ -12,10 +12,9 @@ import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
-import com.example.greenhouse.LineChartView;
 import com.example.greenhouse.R;
 
-public class GraphActivity extends Fragment {
+public class GraphFragment extends Fragment {
 
     private TextView btnMinggu, btnBulan;
     private LineChartView lineChartSuhu, lineChartKelembapan;
@@ -24,7 +23,7 @@ public class GraphActivity extends Fragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.activity_graph, container, false);
+        return inflater.inflate(R.layout.fragment_graph, container, false);
     }
 
     @Override

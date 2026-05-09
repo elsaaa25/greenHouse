@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#FFFFFF"
-    tools:context=".BottomNavigasi">
+    tools:context=".activity.BottomNavigasi">
 
     <!-- Header -->
     <View
@@ -129,7 +129,7 @@
                     <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#EEEEEE" android:layout_centerVertical="true" android:layout_marginStart="30dp"/>
                     <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#000000" android:layout_alignParentBottom="true" android:layout_marginBottom="55dp" android:layout_marginStart="30dp"/>
 
-                    <com.example.greenhouse.LineChartView
+                    <com.example.greenhouse.fragment.LineChartView
                         android:id="@+id/lineChartSuhu"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
@@ -193,7 +193,7 @@
                     <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#EEEEEE" android:layout_centerVertical="true" android:layout_marginStart="30dp"/>
                     <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#000000" android:layout_alignParentBottom="true" android:layout_marginBottom="55dp" android:layout_marginStart="30dp"/>
 
-                    <com.example.greenhouse.LineChartView
+                    <com.example.greenhouse.fragment.LineChartView
                         android:id="@+id/lineChartKelembapan"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"

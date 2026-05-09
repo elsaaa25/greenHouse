@@ -1,14 +1,14 @@
-package com.example.greenhouse;
+package com.example.greenhouse.activity;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
+import com.example.greenhouse.R;
 import com.example.greenhouse.databinding.ActivityMainBinding;
-import com.example.greenhouse.fragment.GraphActivity;
-import com.example.greenhouse.fragment.HomeFragment;
-import com.example.greenhouse.fragment.ProfileActivity;
+import com.example.greenhouse.fragment.GraphFragment;
+import com.example.greenhouse.fragment.ProfileFragment;
 
 public class BottomNavigasi {
     private final AppCompatActivity activity;
@@ -21,18 +21,18 @@ public class BottomNavigasi {
 
     public void setup() {
         // Set default fragment
-        replaceFragment(new HomeFragment());
+        replaceFragment(new ProfileFragment());
 
         binding.bottomNavigationView.setOnItemSelectedListener(item -> {
             int itemId = item.getItemId();
             if (itemId == R.id.home) {
-                replaceFragment(new HomeFragment());
+                replaceFragment(new GraphFragment());
             } else if (itemId == R.id.grafik) {
-                replaceFragment(new GraphActivity());
+                replaceFragment(new GraphFragment());
             } else if (itemId == R.id.notifikasi) {
-                replaceFragment(new HomeFragment());
+                replaceFragment(new ProfileFragment());
             } else if (itemId == R.id.profil) {
-                replaceFragment(new ProfileActivity());
+                replaceFragment(new ProfileFragment());
             }
             return true;
         });

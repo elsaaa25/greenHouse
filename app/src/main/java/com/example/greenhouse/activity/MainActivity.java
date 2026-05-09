@@ -1,8 +1,10 @@
-package com.example.greenhouse;
+package com.example.greenhouse.activity;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import android.os.Bundle;
+
+import com.example.greenhouse.R;
 import com.example.greenhouse.databinding.ActivityMainBinding;
 
 public class MainActivity extends AppCompatActivity {

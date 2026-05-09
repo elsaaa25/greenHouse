@@ -1,4 +1,4 @@
-package com.example.greenhouse;
+package com.example.greenhouse.fragment;
 
 import android.content.Intent;
 import android.net.Uri;
@@ -22,7 +22,9 @@ import androidx.fragment.app.Fragment;
 
 import static android.app.Activity.RESULT_OK;
 
-public class AccountUserActivity extends Fragment {
+import com.example.greenhouse.R;
+
+public class AccountUserFragment extends Fragment {
 
     private ImageView ivProfileImage;
     private TextView tvProfilePlaceholder;
@@ -44,7 +46,7 @@ public class AccountUserActivity extends Fragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.activity_account_user, container, false);
+        return inflater.inflate(R.layout.fragment_account_user, container, false);
     }
 
     @Override
