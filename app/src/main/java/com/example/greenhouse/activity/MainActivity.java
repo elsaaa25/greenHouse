@@ -4,8 +4,8 @@ import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.example.greenhouse.R;
 import com.example.greenhouse.databinding.ActivityMainBinding;
+
 
 public class MainActivity extends AppCompatActivity {
 
