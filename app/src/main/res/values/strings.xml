@@ -1,3 +1,7 @@
 <resources>
-    <string name="app_name">GreenHouse</string>
+    <string name="app_name">GreenApk</string>
+    <string name="menu_home">Beranda</string>
+    <string name="menu_grafik">Grafik</string>
+    <string name="menu_notifikasi">Notifikasi</string>
+    <string name="menu_profil">Profil</string>
 </resources>

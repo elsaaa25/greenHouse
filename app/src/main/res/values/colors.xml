@@ -1,11 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
-    <color name="primary_green">#3B6D11</color>
-    <color name="dark_grey">#212121</color>
-    <color name="light_green">#EAF3DE</color>
-    <color name="card_bg">#F7FAF2</color>
-    <color name="accent_orange">#C67C00</color>
-    <color name="input_stroke">#8BAA6F</color>
+    <!-- Primary Colors -->
+    <color name="green_dark">#1B5E20</color>
+    <color name="green_primary">#2E7D32</color>
+    <color name="green_secondary">#3E6917</color>
+    <color name="green_medium">#388E3C</color>
+    <color name="green_light">#4CAF50</color>
+    <color name="green_pale">#A5D6A7</color>
+    <color name="green_bg">#C8E6C9</color>
+
+    <!-- Alert Colors -->
+    <color name="orange_alert">#E65100</color>
+    <color name="orange_bg">#FFF8E1</color>
+    <color name="orange_icon">#FF6D00</color>
+
+    <!-- Text Colors -->
+    <color name="white">#FFFFFF</color>
+    <color name="gray_text">#9E9E9E</color>
+    <color name="gray_dark">#424242</color>
+    <color name="gray_medium">#757575</color>
+    <color name="gray_bg">#F5F5F5</color>
+
+    <!-- Chart Colors -->
+    <color name="blue_chart">#1565C0</color>
+    <color name="red_chart">#E64A19</color>
+
+    <!-- System -->
+    <color name="colorPrimary">#2E7D32</color>
+    <color name="colorPrimaryVariant">#1B5E20</color>
+    <color name="colorOnPrimary">#FFFFFF</color>
+    <color name="colorSecondary">#4CAF50</color>
+    <color name="colorOnSecondary">#FFFFFF</color>
+    <color name="colorBackground">#F5F5F5</color>
+    <color name="colorSurface">#FFFFFF</color>
+    <color name="colorError">#B00020</color>
 </resources>
