@@ -1,8 +1,8 @@
 package com.example.greenhouse.activity;
 
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.fragment.app.Fragment;
 import android.os.Bundle;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.greenhouse.R;
 import com.example.greenhouse.databinding.ActivityMainBinding;
@@ -14,21 +14,13 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        // Inisialisasi dan setup Bottom Navigation
-        BottomNavigasi bottomNavigasi = new BottomNavigasi(this, binding);
-        bottomNavigasi.setup();
-    }
+        BottomNavigasi bottomNavigasi =
+                new BottomNavigasi(this, binding);
 
-    /**
-     * Metode untuk memuat Fragment ke dalam frame_layout
-     */
-    public void loadFragment(Fragment fragment) {
-        getSupportFragmentManager().beginTransaction()
-                .replace(R.id.frame_layout, fragment)
-                .addToBackStack(null) // Agar bisa kembali ke fragment sebelumnya dengan tombol back
-                .commit();
+        bottomNavigasi.setup();
     }
 }
