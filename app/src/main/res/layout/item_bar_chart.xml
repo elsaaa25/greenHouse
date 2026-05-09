@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="0dp"
+    android:layout_height="match_parent"
+    android:layout_weight="1"
+    android:gravity="center_horizontal|bottom"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/tvBarValue"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="67.21"
+        android:textSize="10sp" />
+
+    <View
+        android:id="@+id/vBar"
+        android:layout_width="20dp"
+        android:layout_height="100dp"
+        android:layout_marginTop="4dp"
+        android:background="#9575CD" />
+
+    <TextView
+        android:id="@+id/tvBarLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Senin"
+        android:textSize="10sp" />
+</LinearLayout>

@@ -1,15 +1,31 @@
+# Gradle files
+.gradle/
+build/
+
+# Android Studio / IntelliJ files
+.idea/
 *.iml
-.gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-.DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
+*.iws
+*.ipr
+captures/
+.externalNativeBuild/
+.cxx/
 local.properties
+
+# Log files
+*.log
+
+# Mac & Windows OS files
+.DS_Store
+Thumbs.db
+
+# Keystore & Sensitive data (Penting untuk keamanan)
+*.jks
+*.keystore
+*.pk8
+*.p12
+google-services.json
+
+# App module specific build folders
+app/build/
+app/release/

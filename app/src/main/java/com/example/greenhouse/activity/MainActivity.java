@@ -5,19 +5,22 @@ import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.greenhouse.R;
-import com.example.greenhouse.fragment.HomeFragment;
+import com.example.greenhouse.databinding.ActivityMainBinding;
 
 public class MainActivity extends AppCompatActivity {
+
+    private ActivityMainBinding binding;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
 
-        // Tampilkan HomeFragment
-        getSupportFragmentManager()
-                .beginTransaction()
-                .replace(R.id.frameContainer, new HomeFragment())
-                .commit();
+        binding = ActivityMainBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
+
+        BottomNavigasi bottomNavigasi =
+                new BottomNavigasi(this, binding);
+
+        bottomNavigasi.setup();
     }
 }

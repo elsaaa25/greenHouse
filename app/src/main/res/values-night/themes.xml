@@ -1,9 +1,8 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <style name="Theme.GreenHouse" parent="Theme.Material3.DayNight.NoActionBar">
-
-        <item name="colorPrimary">#2F5D00</item>
-
-        <item name="android:statusBarColor">#2F5D00</item>
-
+    <!-- Base application theme. -->
+    <style name="Base.Theme.GreenHouse" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Customize your dark theme here. -->
     </style>
+
+    <style name="Theme.GreenHouse" parent="Base.Theme.GreenHouse" />
 </resources>
