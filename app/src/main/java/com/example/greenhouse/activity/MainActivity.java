@@ -1,8 +1,9 @@
 package com.example.greenhouse.activity;
 
+import android.os.Bundle;
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
-import android.os.Bundle;
 
 import com.example.greenhouse.R;
 import com.example.greenhouse.databinding.ActivityMainBinding;
@@ -14,21 +15,37 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        // Inisialisasi dan setup Bottom Navigation
+        // BottomNavigasi akan otomatis membuka HomeFragment
         BottomNavigasi bottomNavigasi = new BottomNavigasi(this, binding);
         bottomNavigasi.setup();
     }
 
     /**
-     * Metode untuk memuat Fragment ke dalam frame_layout
+     * Fungsi ini dipakai ketika fragment ingin membuka fragment lain.
+     * Contoh: ProfileFragment membuka AccountUserFragment.
      */
     public void loadFragment(Fragment fragment) {
-        getSupportFragmentManager().beginTransaction()
+        getSupportFragmentManager()
+                .beginTransaction()
+
+                // Animasi saat masuk fragment baru dan saat kembali
+                .setCustomAnimations(
+                        R.anim.slide_up,
+                        R.anim.slide_up_exit,
+                        R.anim.slide_down_enter,
+                        R.anim.slide_down
+                )
+
+                // Ganti isi frame_layout dengan fragment baru
                 .replace(R.id.frame_layout, fragment)
-                .addToBackStack(null) // Agar bisa kembali ke fragment sebelumnya dengan tombol back
+
+                // Simpan fragment sebelumnya agar bisa kembali
+                .addToBackStack(null)
+
                 .commit();
     }
 }

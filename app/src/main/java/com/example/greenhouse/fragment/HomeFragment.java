@@ -22,10 +22,21 @@ import com.github.mikephil.charting.formatter.IndexAxisValueFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
+import android.widget.Toast;
+
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.FirebaseFirestore;
+
 public class HomeFragment extends Fragment {
 
-    private TextView tvTabSuhu, tvTabKelembapan;
+    private TextView tvTabSuhu, tvTabKelembapan, tvUserName;
     private LineChart lineChart;
+
+    // FirebaseAuth untuk mengambil user yang sedang login
+    private FirebaseAuth auth;
+
+    // Firestore untuk mengambil data user dari database
+    private FirebaseFirestore db;
 
     public HomeFragment() {
         // Required empty public constructor
@@ -47,6 +58,15 @@ public class HomeFragment extends Fragment {
         tvTabKelembapan = view.findViewById(R.id.tvTabKelembapan);
         lineChart = view.findViewById(R.id.lineChart);
 
+        // Inisialisasi nama user
+        tvUserName = view.findViewById(R.id.tvUserName);
+
+        // Inisialisasi Firebase
+        auth = FirebaseAuth.getInstance();
+        db = FirebaseFirestore.getInstance();
+
+        // Ambil nama panggilan dari database
+        ambilNamaPanggilan();
         // Setup Chart
         setupLineChart();
 
@@ -71,6 +91,63 @@ public class HomeFragment extends Fragment {
         return view;
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        // Ambil ulang nama saat kembali ke HomeFragment
+        // Berguna kalau nama baru saja diedit di halaman akun/profile
+        if (auth != null && db != null && tvUserName != null) {
+            ambilNamaPanggilan();
+        }
+    }
+
+    private void ambilNamaPanggilan() {
+
+        // Pastikan user sudah login
+        if (auth.getCurrentUser() == null) {
+            return;
+        }
+
+        // Ambil UID user yang sedang login
+        String uid = auth.getCurrentUser().getUid();
+
+        // Ambil data user dari Firestore
+        db.collection("users")
+                .document(uid)
+                .get()
+                .addOnSuccessListener(documentSnapshot -> {
+
+                    if (documentSnapshot.exists()) {
+
+                        // Ambil field nickName dari Firestore
+                        String nickName = documentSnapshot.getString("nickName");
+
+                        // Jika nickName kosong, pakai default User
+                        if (nickName == null || nickName.isEmpty()) {
+                            nickName = "User";
+                        }
+
+                        // Tampilkan nama panggilan ke halaman beranda
+                        tvUserName.setText(nickName);
+
+                    } else {
+                        Toast.makeText(
+                                getContext(),
+                                "Data user tidak ditemukan",
+                                Toast.LENGTH_SHORT
+                        ).show();
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(
+                            getContext(),
+                            "Gagal mengambil nama: " + e.getMessage(),
+                            Toast.LENGTH_SHORT
+                    ).show();
+                });
+    }
+
     private void setupLineChart() {
         if (lineChart == null) return;
         
@@ -83,12 +160,12 @@ public class HomeFragment extends Fragment {
         xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
         xAxis.setDrawGridLines(false);
         xAxis.setGranularity(1f);
-        xAxis.setLabelCount(8);
+        xAxis.setLabelCount(7);
 
         xAxis.setValueFormatter(
                 new IndexAxisValueFormatter(
                         new String[]{
-                                "00:00", "03:00", "06:00", "09:00", "12:00", "15:00", "18:00", "21:00"
+                                "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"
                         }
                 )
         );
@@ -113,7 +190,7 @@ public class HomeFragment extends Fragment {
             entries.add(new Entry(4, 27f));
             entries.add(new Entry(5, 29f));
             entries.add(new Entry(6, 28f));
-            entries.add(new Entry(7, 28f));
+
         } else {
             entries.add(new Entry(0, 60f));
             entries.add(new Entry(1, 65f));
@@ -122,7 +199,7 @@ public class HomeFragment extends Fragment {
             entries.add(new Entry(4, 68f));
             entries.add(new Entry(5, 75f));
             entries.add(new Entry(6, 72f));
-            entries.add(new Entry(7, 70f));
+
         }
 
         LineDataSet dataSet = new LineDataSet(entries, type);
@@ -141,4 +218,5 @@ public class HomeFragment extends Fragment {
         lineChart.animateX(1000);
         lineChart.invalidate();
     }
+
 }

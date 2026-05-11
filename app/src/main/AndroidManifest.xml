@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
+    <!-- Izin internet untuk Firebase -->
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:allowBackup="true"
@@ -11,34 +13,32 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.GreenHouse">
-
+        <activity
+            android:name=".activity.AccountUserActivity"
+            android:exported="false" />
         <!-- LoginActivity sebagai halaman pertama saat aplikasi dibuka -->
         <activity
-            android:name=".activity.MainActivity"
+            android:name=".activity.LoginActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
-
+        </activity> <!-- Halaman utama setelah login/register berhasil -->
+        <activity
+            android:name=".activity.MainActivity"
+            android:exported="false" /> <!-- Halaman register -->
         <activity
             android:name=".activity.RegistActivity"
-            android:exported="false" />
-
+            android:exported="false" /> <!-- Halaman pilih tanaman -->
         <activity
             android:name=".activity.LoadingActivity"
             android:exported="false" />
 
-        <activity
-            android:name=".activity.LoginActivity"
-            android:exported="false" />
-
-
         <meta-data
             android:name="preloaded_fonts"
             android:resource="@array/preloaded_fonts" />
-
     </application>
 
 </manifest>

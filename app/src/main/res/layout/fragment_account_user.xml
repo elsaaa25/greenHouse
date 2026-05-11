@@ -9,9 +9,6 @@
     tools:context=".activity.BottomNavigasi">
 
     <!-- Header -->
-
-
-
     <View
         android:id="@+id/headerBackground"
         android:layout_width="match_parent"
@@ -116,7 +113,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:text="Harap isi password secara lengkap!"
+        android:text="Harap isi data secara lengkap!"
         android:textColor="#F44336"
         android:textSize="13sp"
         android:textStyle="bold"
@@ -139,13 +136,32 @@
             android:paddingHorizontal="32dp"
             android:paddingBottom="32dp">
 
-            <!-- DATA DIRI -->
+            <!-- DATA PROFIL -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="PERBARUI DATA DIRI"
+                android:text="PERBARUI DATA PROFIL"
                 android:textColor="#000000"
                 android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="Nama Panggilan"
+                android:textColor="#212121" />
+
+            <EditText
+                android:id="@+id/etNickName"
+                android:layout_width="match_parent"
+                android:layout_height="45dp"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_input"
+                android:inputType="textPersonName"
+                android:hint="Masukkan Nama Panggilan"
+                android:paddingHorizontal="12dp"
+                android:textColor="#000000"
+                android:textSize="14sp" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -161,6 +177,7 @@
                 android:layout_marginTop="8dp"
                 android:background="@drawable/bg_input"
                 android:inputType="textPersonName"
+                android:hint="Masukkan Nama Lengkap"
                 android:paddingHorizontal="12dp"
                 android:textColor="#000000"
                 android:textSize="14sp" />
@@ -168,7 +185,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="12dp"
                 android:text="Email"
                 android:textColor="#212121" />
 
@@ -179,16 +196,29 @@
                 android:layout_marginTop="8dp"
                 android:background="@drawable/bg_input"
                 android:inputType="textEmailAddress"
+                android:hint="Masukkan Email Baru"
                 android:paddingHorizontal="12dp"
                 android:textColor="#000000"
                 android:textSize="14sp" />
+
+            <Button
+                android:id="@+id/btnUpdateProfile"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:layout_marginTop="16dp"
+                android:backgroundTint="#3E6917"
+                android:text="Simpan Perubahan Profil"
+                android:textAllCaps="false"
+                android:textColor="#FFFFFF"
+                android:textStyle="bold"
+                app:cornerRadius="10dp" />
 
             <!-- KEAMANAN AKUN -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="32dp"
-                android:text="PERBARUI KEAMANAN AKUN"
+                android:text="PERBARUI KATA SANDI"
                 android:textColor="#000000"
                 android:textStyle="bold" />
 
@@ -206,6 +236,7 @@
                 android:layout_marginTop="8dp"
                 android:background="@drawable/bg_input"
                 android:inputType="textPassword"
+                android:hint="Masukkan Password Lama"
                 android:paddingHorizontal="12dp"
                 android:textColor="#000000"
                 android:textSize="14sp" />
@@ -224,18 +255,18 @@
                 android:layout_marginTop="8dp"
                 android:background="@drawable/bg_input"
                 android:inputType="textPassword"
+                android:hint="Masukkan Password Baru"
                 android:paddingHorizontal="12dp"
                 android:textColor="#000000"
                 android:textSize="14sp" />
 
-            <!-- BUTTONS -->
             <Button
-                android:id="@+id/btnSaveChanges"
+                android:id="@+id/btnSaveChangesPassword"
                 android:layout_width="match_parent"
                 android:layout_height="55dp"
-                android:layout_marginTop="40dp"
+                android:layout_marginTop="32dp"
                 android:backgroundTint="#3E6917"
-                android:text="Simpan Perubahan"
+                android:text="Simpan Password"
                 android:textAllCaps="false"
                 android:textColor="#FFFFFF"
                 android:textStyle="bold"

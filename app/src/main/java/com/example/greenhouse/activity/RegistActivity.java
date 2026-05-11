@@ -2,6 +2,7 @@ package com.example.greenhouse.activity;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Patterns;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -30,39 +31,75 @@ public class RegistActivity extends AppCompatActivity {
         btnRegister = findViewById(R.id.btnRegister);
         tvLogin = findViewById(R.id.tvLogin);
 
-        if (btnRegister != null) {
-            btnRegister.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    String nickName = etNickName.getText().toString().trim();
-                    String fullName = etFullName.getText().toString().trim();
-                    String email = etEmail.getText().toString().trim();
-                    String password = etPassword.getText().toString().trim();
+// Tombol register diubah fungsinya menjadi lanjut ke pilih tanaman
+        btnRegister.setText("Lanjutkan");
 
-                    if (nickName.isEmpty() || fullName.isEmpty() || email.isEmpty() || password.isEmpty()) {
-                        Toast.makeText(RegistActivity.this, "Mohon lengkapi semua data", Toast.LENGTH_SHORT).show();
-                    } else if (password.length() < 8) {
-                        // Validasi minimal 8 karakter untuk password
-                        etPassword.setError("Password minimal harus 8 karakter");
-                        etPassword.requestFocus();
-                    } else {
-                        // Pindah ke LoadingActivity setelah klik Daftar
-                        Intent intent = new Intent(RegistActivity.this, LoadingActivity.class);
-                        startActivity(intent);
-                    }
-                }
-            });
+        // Klik tombol lanjutkan
+        btnRegister.setOnClickListener(v -> lanjutKePilihTanaman());
+
+        // Klik teks masuk, kembali ke LoginActivity
+        tvLogin.setOnClickListener(v -> {
+            Intent intent = new Intent(RegistActivity.this, LoginActivity.class);
+            startActivity(intent);
+            finish();
+        });
+    }
+
+    private void lanjutKePilihTanaman() {
+        String nickName = etNickName.getText().toString().trim();
+        String fullName = etFullName.getText().toString().trim();
+        String email = etEmail.getText().toString().trim();
+        String password = etPassword.getText().toString().trim();
+
+        // Validasi nama panggilan
+        if (nickName.isEmpty()) {
+            etNickName.setError("Nama panggilan wajib diisi");
+            etNickName.requestFocus();
+            return;
         }
 
-        if (tvLogin != null) {
-            tvLogin.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Intent intent = new Intent(RegistActivity.this, LoginActivity.class);
-                    startActivity(intent);
-                    finish();
-                }
-            });
+        // Validasi nama lengkap
+        if (fullName.isEmpty()) {
+            etFullName.setError("Nama lengkap wajib diisi");
+            etFullName.requestFocus();
+            return;
         }
+
+        // Validasi email kosong
+        if (email.isEmpty()) {
+            etEmail.setError("Email wajib diisi");
+            etEmail.requestFocus();
+            return;
+        }
+
+        // Validasi format email
+        if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            etEmail.setError("Format email tidak valid");
+            etEmail.requestFocus();
+            return;
+        }
+
+        // Validasi password kosong
+        if (password.isEmpty()) {
+            etPassword.setError("Password wajib diisi");
+            etPassword.requestFocus();
+            return;
+        }
+
+        // Validasi panjang password
+        if (password.length() < 8) {
+            etPassword.setError("Password minimal harus 8 karakter");
+            etPassword.requestFocus();
+            return;
+        }
+
+        // Kirim data ke LoadingActivity.
+        // Akun Firebase belum dibuat di sini.
+        Intent intent = new Intent(RegistActivity.this, LoadingActivity.class);
+        intent.putExtra("nickName", nickName);
+        intent.putExtra("fullName", fullName);
+        intent.putExtra("email", email);
+        intent.putExtra("password", password);
+        startActivity(intent);
     }
 }
