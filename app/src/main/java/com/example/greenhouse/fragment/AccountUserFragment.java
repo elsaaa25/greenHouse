@@ -327,19 +327,12 @@ public class AccountUserFragment extends Fragment {
                 });
     }
 
-    /**
-     * Mengatur huruf awal pada avatar.
-     *
-     * Contoh:
-     * nickName = "Jackawi"
-     * maka avatar menjadi "J".
-     */
-    private void setProfileInitial(String nickName) {
+    private void setProfileInitial(String name) {
 
-        if (nickName != null && !nickName.trim().isEmpty()) {
+        if (name != null && !name.trim().isEmpty()) {
 
             // Ambil huruf pertama dari nama panggilan
-            String initial = nickName.trim().substring(0, 1).toUpperCase();
+            String initial = name.trim().substring(0, 1).toUpperCase();
 
             // Tampilkan huruf pertama di placeholder
             tvProfilePlaceholder.setText(initial);
@@ -505,7 +498,7 @@ public class AccountUserFragment extends Fragment {
                     btnUpdateProfile.setEnabled(true);
 
                     // Update avatar huruf awal
-                    setProfileInitial(nickName);
+                    setProfileInitial(fullName);
 
                     // Beri pesan berhasil
                     Toast.makeText(
