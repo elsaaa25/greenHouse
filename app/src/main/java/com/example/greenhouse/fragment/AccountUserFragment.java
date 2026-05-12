@@ -307,8 +307,8 @@ public class AccountUserFragment extends Fragment {
                         etFullName.setText(fullName);
                         etEmail.setText(email);
 
-                        // Mengatur huruf avatar dari nama panggilan
-                        setProfileInitial(nickName);
+                        // Mengatur huruf avatar dari nama lengkap (disamakan dengan ProfileFragment)
+                        setProfileInitial(fullName);
 
                     } else {
                         Toast.makeText(
@@ -331,7 +331,7 @@ public class AccountUserFragment extends Fragment {
 
         if (name != null && !name.trim().isEmpty()) {
 
-            // Ambil huruf pertama dari nama panggilan
+            // Ambil huruf pertama dari nama yang diberikan
             String initial = name.trim().substring(0, 1).toUpperCase();
 
             // Tampilkan huruf pertama di placeholder
