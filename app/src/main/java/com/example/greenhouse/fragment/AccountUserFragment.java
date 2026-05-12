@@ -37,11 +37,23 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageReference;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import com.example.greenhouse.api.CloudinaryApi;
+import com.example.greenhouse.api.CloudinaryResponse;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
+
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 public class AccountUserFragment extends Fragment {
 
@@ -66,7 +78,6 @@ public class AccountUserFragment extends Fragment {
     // Firebase
     private FirebaseAuth auth;
     private FirebaseFirestore db;
-    private FirebaseStorage storage;
 
     // URI foto yang dipilih dari galeri
     // Foto belum diupload sampai tombol Simpan Perubahan Profil ditekan
@@ -128,7 +139,6 @@ public class AccountUserFragment extends Fragment {
         // Inisialisasi Firebase
         auth = FirebaseAuth.getInstance();
         db = FirebaseFirestore.getInstance();
-        storage = FirebaseStorage.getInstance();
 
         // Menghubungkan komponen foto profil dari XML ke Java
         ivProfileImage = view.findViewById(R.id.ivProfileImage);
@@ -348,6 +358,29 @@ public class AccountUserFragment extends Fragment {
         }
     }
 
+    private File uriToFile(Uri uri) throws Exception {
+
+        File file = new File(requireContext().getCacheDir(), "profile_image.jpg");
+
+        InputStream inputStream =
+                requireContext().getContentResolver().openInputStream(uri);
+
+        FileOutputStream outputStream =
+                new FileOutputStream(file);
+
+        byte[] buffer = new byte[1024];
+        int length;
+
+        while ((length = inputStream.read(buffer)) > 0) {
+            outputStream.write(buffer, 0, length);
+        }
+
+        outputStream.close();
+        inputStream.close();
+
+        return file;
+    }
+
     private void updateDataProfilDanEmail() {
 
         FirebaseUser currentUser = auth.getCurrentUser();
@@ -467,66 +500,20 @@ public class AccountUserFragment extends Fragment {
             String fullName,
             String email
     ) {
+
         showLoading("Menyimpan perubahan...");
 
-        /*
-         * Jika user memilih foto baru,
-         * upload foto ke Firebase Storage terlebih dahulu.
-         */
         if (selectedImageUri != null) {
 
-            StorageReference imageRef = storage
-                    .getReference()
-                    .child("profile_images")
-                    .child(uid + ".jpg");
-
-            imageRef.putFile(selectedImageUri)
-                    .addOnSuccessListener(taskSnapshot -> {
-
-                        imageRef.getDownloadUrl()
-                                .addOnSuccessListener(uri -> {
-
-                                    String photoUrl = uri.toString();
-
-                                    // Simpan data user beserta URL foto ke Firestore
-                                    simpanDataUserKeFirestore(
-                                            uid,
-                                            nickName,
-                                            fullName,
-                                            email,
-                                            photoUrl
-                                    );
-
-                                })
-                                .addOnFailureListener(e -> {
-                                    hideLoading();
-                                    btnUpdateProfile.setEnabled(true);
-
-                                    Toast.makeText(
-                                            requireContext(),
-                                            "Gagal mengambil URL foto: " + e.getMessage(),
-                                            Toast.LENGTH_LONG
-                                    ).show();
-                                });
-
-                    })
-                    .addOnFailureListener(e -> {
-                        hideLoading();
-                        btnUpdateProfile.setEnabled(true);
-
-                        Toast.makeText(
-                                requireContext(),
-                                "Gagal upload foto: " + e.getMessage(),
-                                Toast.LENGTH_LONG
-                        ).show();
-                    });
+            uploadFotoKeCloudinary(
+                    uid,
+                    nickName,
+                    fullName,
+                    email
+            );
 
         } else {
 
-            /*
-             * Jika user tidak memilih foto baru,
-             * hanya update nama, email, dan data profil lainnya.
-             */
             simpanDataUserKeFirestore(
                     uid,
                     nickName,
@@ -534,6 +521,115 @@ public class AccountUserFragment extends Fragment {
                     email,
                     null
             );
+        }
+    }
+
+    private void uploadFotoKeCloudinary(
+            String uid,
+            String nickName,
+            String fullName,
+            String email
+    ) {
+
+        try {
+
+            String CLOUD_NAME = "ddver48sg";
+            String UPLOAD_PRESET = "greenhouse_profile";
+
+            File file = uriToFile(selectedImageUri);
+
+            RequestBody requestFile =
+                    RequestBody.create(
+                            file,
+                            MediaType.parse("image/*")
+                    );
+
+            MultipartBody.Part body =
+                    MultipartBody.Part.createFormData(
+                            "file",
+                            file.getName(),
+                            requestFile
+                    );
+
+            RequestBody uploadPreset =
+                    RequestBody.create(
+                            UPLOAD_PRESET,
+                            MediaType.parse("text/plain")
+                    );
+
+            Retrofit retrofit = new Retrofit.Builder()
+                    .baseUrl("https://api.cloudinary.com/")
+                    .addConverterFactory(GsonConverterFactory.create())
+                    .build();
+
+            CloudinaryApi api =
+                    retrofit.create(CloudinaryApi.class);
+
+            api.uploadImage(
+                            CLOUD_NAME,
+                            body,
+                            uploadPreset
+                    )
+                    .enqueue(new retrofit2.Callback<CloudinaryResponse>() {
+
+                        @Override
+                        public void onResponse(
+                                retrofit2.Call<CloudinaryResponse> call,
+                                retrofit2.Response<CloudinaryResponse> response
+                        ) {
+
+                            if (response.isSuccessful()
+                                    && response.body() != null
+                                    && response.body().getSecureUrl() != null) {
+
+                                String photoUrl =
+                                        response.body().getSecureUrl();
+
+                                simpanDataUserKeFirestore(
+                                        uid,
+                                        nickName,
+                                        fullName,
+                                        email,
+                                        photoUrl
+                                );
+
+                            } else {
+
+                                hideLoading();
+
+                                Toast.makeText(
+                                        requireContext(),
+                                        "Upload gagal",
+                                        Toast.LENGTH_LONG
+                                ).show();
+                            }
+                        }
+
+                        @Override
+                        public void onFailure(
+                                retrofit2.Call<CloudinaryResponse> call,
+                                Throwable t
+                        ) {
+
+                            hideLoading();
+
+                            Toast.makeText(
+                                    requireContext(),
+                                    "Error: " + t.getMessage(),
+                                    Toast.LENGTH_LONG
+                            ).show();
+                        }
+                    });
+
+        } catch (Exception e) {
+
+            hideLoading();
+
+            Toast.makeText(
+                    requireContext(),
+                    "Gagal membaca foto",
+                    Toast.LENGTH_LONG
+            ).show();
         }
     }
 
