@@ -34,10 +34,10 @@ public class MainActivity extends AppCompatActivity {
 
                 // Animasi saat masuk fragment baru dan saat kembali
                 .setCustomAnimations(
-                        R.anim.slide_up,
-                        R.anim.slide_up_exit,
-                        R.anim.slide_down_enter,
-                        R.anim.slide_down
+                        R.anim.slide_up,    // Masuk: Geser ke atas
+                        R.anim.stay,        // Keluar: Diam (halaman profile tetap di bawah)
+                        R.anim.stay,        // Pop Masuk: Diam
+                        R.anim.slide_down   // Pop Keluar: Geser ke bawah (halaman Info Akun turun)
                 )
 
                 // Ganti isi frame_layout dengan fragment baru
