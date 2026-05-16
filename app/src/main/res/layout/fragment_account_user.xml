@@ -36,6 +36,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:text="Info Akun"
+        android:fontFamily="@font/poppins"
         android:textColor="#FFFFFF"
         android:textSize="22sp"
         android:textStyle="bold"
@@ -49,6 +50,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Nama, Email &amp; Perbarui kata sandi"
+        android:fontFamily="@font/poppins"
         android:textColor="#E0E0E0"
         android:textSize="12sp"
         app:layout_constraintBottom_toBottomOf="@id/btnBack"
@@ -72,6 +74,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:background="#C5E1A5"
+            android:fontFamily="@font/poppins"
             android:gravity="center"
             android:textColor="#000000"
             android:textSize="48sp"
@@ -100,6 +103,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="12dp"
+        android:fontFamily="@font/poppins"
         android:text="Tap untuk ganti foto"
         android:textColor="#616161"
         android:textSize="16sp"
@@ -112,6 +116,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
+        android:fontFamily="@font/poppins"
         android:text="Harap isi data secara lengkap!"
         android:textColor="#F44336"
         android:textSize="13sp"
@@ -139,6 +144,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:fontFamily="@font/poppins"
                 android:text="PERBARUI DATA PROFIL"
                 android:textColor="#000000"
                 android:textStyle="bold" />
@@ -146,6 +152,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:fontFamily="@font/poppins"
                 android:layout_marginTop="12dp"
                 android:text="Nama Panggilan"
                 android:textColor="#212121" />
@@ -160,14 +167,16 @@
                 android:hint="Masukkan Nama Panggilan"
                 android:paddingHorizontal="12dp"
                 android:textColor="#000000"
-                android:textSize="14sp" />
+                android:textSize="14sp"
+                android:fontFamily="@font/poppins"/>
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
                 android:text="Nama Lengkap"
-                android:textColor="#212121" />
+                android:textColor="#212121"
+                android:fontFamily="@font/poppins"/>
 
             <EditText
                 android:id="@+id/etFullName"
@@ -179,14 +188,16 @@
                 android:hint="Masukkan Nama Lengkap"
                 android:paddingHorizontal="12dp"
                 android:textColor="#000000"
-                android:textSize="14sp" />
+                android:textSize="14sp"
+                android:fontFamily="@font/poppins"/>
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
                 android:text="Email"
-                android:textColor="#212121" />
+                android:textColor="#212121"
+                android:fontFamily="@font/poppins"/>
 
             <EditText
                 android:id="@+id/etEmail"
@@ -198,7 +209,8 @@
                 android:hint="Masukkan Email Baru"
                 android:paddingHorizontal="12dp"
                 android:textColor="#000000"
-                android:textSize="14sp" />
+                android:textSize="14sp"
+                android:fontFamily="@font/poppins"/>
 
             <Button
                 android:id="@+id/btnUpdateProfile"
@@ -210,7 +222,8 @@
                 android:textAllCaps="false"
                 android:textColor="#FFFFFF"
                 android:textStyle="bold"
-                app:cornerRadius="10dp" />
+                app:cornerRadius="10dp"
+                android:fontFamily="@font/poppins"/>
 
             <!-- KEAMANAN AKUN -->
             <TextView
@@ -219,14 +232,16 @@
                 android:layout_marginTop="32dp"
                 android:text="PERBARUI KATA SANDI"
                 android:textColor="#000000"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                android:fontFamily="@font/poppins"/>
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
                 android:text="Password Lama"
-                android:textColor="#212121" />
+                android:textColor="#212121"
+                android:fontFamily="@font/poppins"/>
 
             <EditText
                 android:id="@+id/etOldPassword"
@@ -238,14 +253,16 @@
                 android:hint="Masukkan Password Lama"
                 android:paddingHorizontal="12dp"
                 android:textColor="#000000"
-                android:textSize="14sp" />
+                android:textSize="14sp"
+                android:fontFamily="@font/poppins"/>
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 android:text="Password Baru"
-                android:textColor="#212121" />
+                android:textColor="#212121"
+                android:fontFamily="@font/poppins"/>
 
             <EditText
                 android:id="@+id/etNewPassword"
@@ -257,7 +274,8 @@
                 android:hint="Masukkan Password Baru"
                 android:paddingHorizontal="12dp"
                 android:textColor="#000000"
-                android:textSize="14sp" />
+                android:textSize="14sp"
+                android:fontFamily="@font/poppins"/>
 
             <Button
                 android:id="@+id/btnSaveChangesPassword"
@@ -269,7 +287,8 @@
                 android:textAllCaps="false"
                 android:textColor="#FFFFFF"
                 android:textStyle="bold"
-                app:cornerRadius="10dp" />
+                app:cornerRadius="10dp"
+                android:fontFamily="@font/poppins"/>
 
             <Button
                 android:id="@+id/btnCancel"
@@ -283,7 +302,8 @@
                 android:textStyle="bold"
                 app:cornerRadius="10dp"
                 app:strokeColor="#3E6917"
-                app:strokeWidth="1dp" />
+                app:strokeWidth="1dp"
+                android:fontFamily="@font/poppins"/>
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>

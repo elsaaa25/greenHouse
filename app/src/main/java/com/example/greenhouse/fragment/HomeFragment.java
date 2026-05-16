@@ -1,11 +1,14 @@
 package com.example.greenhouse.fragment;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -18,14 +21,11 @@ import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import android.widget.Toast;
-
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.firestore.FirebaseFirestore;
 
 public class HomeFragment extends Fragment {
 
@@ -61,12 +61,20 @@ public class HomeFragment extends Fragment {
         // Inisialisasi nama user
         tvUserName = view.findViewById(R.id.tvUserName);
 
+        // --- AMBIL NAMA DARI CACHE AGAR INSTAN (Mencegah Flicker) ---
+        if (isAdded()) {
+            SharedPreferences prefs = requireContext().getSharedPreferences("user_prefs", Context.MODE_PRIVATE);
+            String savedName = prefs.getString("nickName", "User");
+            tvUserName.setText(savedName);
+        }
+
         // Inisialisasi Firebase
         auth = FirebaseAuth.getInstance();
         db = FirebaseFirestore.getInstance();
 
-        // Ambil nama panggilan dari database
+        // Ambil nama panggilan terbaru dari database
         ambilNamaPanggilan();
+        
         // Setup Chart
         setupLineChart();
 
@@ -96,7 +104,6 @@ public class HomeFragment extends Fragment {
         super.onResume();
 
         // Ambil ulang nama saat kembali ke HomeFragment
-        // Berguna kalau nama baru saja diedit di halaman akun/profile
         if (auth != null && db != null && tvUserName != null) {
             ambilNamaPanggilan();
         }
@@ -128,23 +135,37 @@ public class HomeFragment extends Fragment {
                             nickName = "User";
                         }
 
+                        // --- SIMPAN KE CACHE UNTUK PEMBUKAAN BERIKUTNYA ---
+                        if (isAdded()) {
+                            SharedPreferences prefs = requireContext().getSharedPreferences("user_prefs", Context.MODE_PRIVATE);
+                            SharedPreferences.Editor editor = prefs.edit();
+                            editor.putString("nickName", nickName);
+                            editor.apply();
+                        }
+
                         // Tampilkan nama panggilan ke halaman beranda
-                        tvUserName.setText(nickName);
+                        if (tvUserName != null) {
+                            tvUserName.setText(nickName);
+                        }
 
                     } else {
-                        Toast.makeText(
-                                getContext(),
-                                "Data user tidak ditemukan",
-                                Toast.LENGTH_SHORT
-                        ).show();
+                        if (getContext() != null) {
+                            Toast.makeText(
+                                    getContext(),
+                                    "Data user tidak ditemukan",
+                                    Toast.LENGTH_SHORT
+                            ).show();
+                        }
                     }
                 })
                 .addOnFailureListener(e -> {
-                    Toast.makeText(
-                            getContext(),
-                            "Gagal mengambil nama: " + e.getMessage(),
-                            Toast.LENGTH_SHORT
-                    ).show();
+                    if (getContext() != null) {
+                        Toast.makeText(
+                                getContext(),
+                                "Gagal mengambil nama: " + e.getMessage(),
+                                Toast.LENGTH_SHORT
+                        ).show();
+                    }
                 });
     }
 
@@ -218,5 +239,4 @@ public class HomeFragment extends Fragment {
         lineChart.animateX(1000);
         lineChart.invalidate();
     }
-
 }

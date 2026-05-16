@@ -59,11 +59,21 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center"
-                        android:layout_marginBottom="24dp"
                         android:fontFamily="@font/krona_one"
-                        android:text="Registrasi"
+                        android:text="Buat Akun"
                         android:textColor="@color/gray_dark"
-                        android:textSize="32sp"
+                        android:textSize="24sp"
+                        android:textStyle="bold" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:layout_marginTop="8dp"
+                        android:layout_marginBottom="24dp"
+                        android:fontFamily="@font/poppins"
+                        android:text="Daftarkan diri anda sekarang"
+                        android:textColor="@color/gray_medium"
+                        android:textSize="12sp"
                         android:textStyle="bold" />
 
                     <!-- Nama Panggilan -->
@@ -151,7 +161,7 @@
                         android:id="@+id/btnRegister"
                         android:layout_width="match_parent"
                         android:layout_height="52dp"
-                        android:background="@drawable/bg_button_green"
+                        android:background="@drawable/bg_button_login"
                         android:text="Daftar"
                         android:textAllCaps="false"
                         android:textColor="@color/white"

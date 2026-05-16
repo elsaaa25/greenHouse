@@ -6,6 +6,8 @@ import android.app.AlertDialog;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.provider.MediaStore;
 import android.util.Patterns;
 import android.view.LayoutInflater;
@@ -20,6 +22,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
@@ -80,7 +83,6 @@ public class AccountUserFragment extends Fragment {
     private FirebaseFirestore db;
 
     // URI foto yang dipilih dari galeri
-    // Foto belum diupload sampai tombol Simpan Perubahan Profil ditekan
     private Uri selectedImageUri;
 
     // Loading dialog
@@ -91,24 +93,12 @@ public class AccountUserFragment extends Fragment {
             registerForActivityResult(
                     new ActivityResultContracts.StartActivityForResult(),
                     result -> {
-
-                        // Mengecek apakah user berhasil memilih gambar
                         if (result.getResultCode() == RESULT_OK && result.getData() != null) {
-
-                            // Mengambil URI gambar yang dipilih
                             Uri imageUri = result.getData().getData();
-
                             if (imageUri != null) {
-
-                                // Simpan URI foto sementara
-                                // Foto belum disimpan ke Firebase di sini
                                 selectedImageUri = imageUri;
-
-                                // Preview foto ke ImageView
                                 ivProfileImage.setImageURI(selectedImageUri);
                                 ivProfileImage.setVisibility(View.VISIBLE);
-
-                                // Sembunyikan placeholder huruf awal
                                 tvProfilePlaceholder.setVisibility(View.GONE);
                             }
                         }
@@ -122,7 +112,6 @@ public class AccountUserFragment extends Fragment {
             @Nullable ViewGroup container,
             @Nullable Bundle savedInstanceState
     ) {
-        // Menghubungkan fragment dengan layout fragment_account_user.xml
         return inflater.inflate(R.layout.fragment_account_user, container, false);
     }
 
@@ -133,671 +122,271 @@ public class AccountUserFragment extends Fragment {
     ) {
         super.onViewCreated(view, savedInstanceState);
 
-        // Menyembunyikan Bottom Navigation saat berada di halaman Info Akun
+        // Menghilangkan Bottom Navigation dengan animasi halus
         toggleBottomNavigation(false);
+
+        // Menangani tombol back sistem agar sinkron dengan animasi
+        requireActivity().getOnBackPressedDispatcher().addCallback(getViewLifecycleOwner(), new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                backToProfileSmooth();
+            }
+        });
 
         // Inisialisasi Firebase
         auth = FirebaseAuth.getInstance();
         db = FirebaseFirestore.getInstance();
 
-        // Menghubungkan komponen foto profil dari XML ke Java
+        // Bind View
         ivProfileImage = view.findViewById(R.id.ivProfileImage);
         tvProfilePlaceholder = view.findViewById(R.id.tvProfilePlaceholder);
         tvWarning = view.findViewById(R.id.tvWarning);
-
-        // Tombol back
         ImageButton btnBack = view.findViewById(R.id.btnBack);
-
-        // Card foto profil
         CardView profileImageCard = view.findViewById(R.id.profileImageCard);
-
-        // Text tap untuk ganti foto
         TextView tvTapToChange = view.findViewById(R.id.tvTapToChange);
-
-        // Input data profil
         etNickName = view.findViewById(R.id.etNickName);
         etFullName = view.findViewById(R.id.etFullName);
         etEmail = view.findViewById(R.id.etEmail);
-
-        // Tombol simpan perubahan profil
         btnUpdateProfile = view.findViewById(R.id.btnUpdateProfile);
-
-        // Input password
         etOldPassword = view.findViewById(R.id.etOldPassword);
         etNewPassword = view.findViewById(R.id.etNewPassword);
-
-        // Tombol simpan password baru
         btnSaveChangesPassword = view.findViewById(R.id.btnSaveChangesPassword);
-
-        // Tombol batal
         btnCancel = view.findViewById(R.id.btnCancel);
 
-        // Mengambil data user dari Firestore
-        ambilDataUser();
-
-        // Listener untuk kembali ke halaman sebelumnya
-        View.OnClickListener goBackListener = v -> {
+        // Beri jeda pengambilan data agar animasi masuk selesai dulu (cegah lag)
+        view.postDelayed(() -> {
             if (isAdded()) {
-                getParentFragmentManager().popBackStack();
+                ambilDataUser();
             }
-        };
+        }, 300);
 
+        // Listener Tombol
+        View.OnClickListener goBackListener = v -> backToProfileSmooth();
         btnBack.setOnClickListener(goBackListener);
         btnCancel.setOnClickListener(goBackListener);
 
-        // Listener untuk memilih foto dari galeri
         View.OnClickListener pickImageListener = v -> {
-
-            // Membuka galeri
-            Intent intent = new Intent(
-                    Intent.ACTION_PICK,
-                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI
-            );
-
+            Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
             imagePickerLauncher.launch(intent);
         };
-
-        // Klik foto profil untuk memilih gambar
         profileImageCard.setOnClickListener(pickImageListener);
+        if (tvTapToChange != null) tvTapToChange.setOnClickListener(pickImageListener);
 
-        // Klik teks tap untuk ganti foto
-        if (tvTapToChange != null) {
-            tvTapToChange.setOnClickListener(pickImageListener);
-        }
-
-        /*
-         * Tombol Simpan Perubahan Profil.
-         *
-         * Di tombol ini proses dilakukan:
-         * - update nama panggilan
-         * - update nama lengkap
-         * - update email
-         * - upload foto profil jika user memilih foto baru
-         */
         btnUpdateProfile.setOnClickListener(v -> updateDataProfilDanEmail());
-
-        /*
-         * Tombol Simpan Password.
-         *
-         * Password hanya disimpan di Firebase Authentication,
-         * tidak disimpan di Firestore.
-         */
         btnSaveChangesPassword.setOnClickListener(v -> updatePasswordUser());
     }
 
-    private void showLoading(String message) {
-
-        if (!isAdded()) {
-            return;
+    private void toggleBottomNavigation(boolean show) {
+        if (getActivity() instanceof MainActivity) {
+            View bottomNav = getActivity().findViewById(R.id.bottomNavigationView);
+            if (bottomNav != null) {
+                if (show) {
+                    bottomNav.animate().translationY(0).setDuration(300).start();
+                } else {
+                    // Turunkan menu ke bawah layar agar tidak menghalangi fragment
+                    bottomNav.animate().translationY(bottomNav.getHeight()).setDuration(300).start();
+                }
+            }
         }
-
-        if (loadingDialog != null && loadingDialog.isShowing()) {
-            return;
-        }
-
-        LinearLayout layout = new LinearLayout(requireContext());
-        layout.setOrientation(LinearLayout.VERTICAL);
-        layout.setPadding(60, 50, 60, 50);
-        layout.setGravity(android.view.Gravity.CENTER);
-
-        ProgressBar progressBar = new ProgressBar(requireContext());
-
-        TextView tvMessage = new TextView(requireContext());
-        tvMessage.setText(message);
-        tvMessage.setTextSize(16);
-        tvMessage.setPadding(0, 20, 0, 0);
-        tvMessage.setGravity(android.view.Gravity.CENTER);
-
-        layout.addView(progressBar);
-        layout.addView(tvMessage);
-
-        loadingDialog = new AlertDialog.Builder(requireContext())
-                .setView(layout)
-                .setCancelable(false)
-                .create();
-
-        loadingDialog.show();
     }
 
-    private void hideLoading() {
-        if (loadingDialog != null && loadingDialog.isShowing()) {
-            loadingDialog.dismiss();
+    private void backToProfileSmooth() {
+        if (!isAdded()) return;
+
+        // Sembunyikan keyboard
+        View focus = requireActivity().getCurrentFocus();
+        if (focus != null) {
+            android.view.inputmethod.InputMethodManager imm = (android.view.inputmethod.InputMethodManager) 
+                    requireActivity().getSystemService(android.content.Context.INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(focus.getWindowToken(), 0);
         }
+
+        getParentFragmentManager().popBackStack();
+        toggleBottomNavigation(true);
     }
 
     private void ambilDataUser() {
-
         FirebaseUser currentUser = auth.getCurrentUser();
+        if (currentUser == null) return;
 
-        if (currentUser == null) {
-            Toast.makeText(requireContext(), "User belum login", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        String uid = currentUser.getUid();
-
-        db.collection("users")
-                .document(uid)
-                .get()
+        db.collection("users").document(currentUser.getUid()).get()
                 .addOnSuccessListener(documentSnapshot -> {
-
                     if (documentSnapshot.exists()) {
-
                         String nickName = documentSnapshot.getString("nickName");
                         String fullName = documentSnapshot.getString("fullName");
                         String email = documentSnapshot.getString("email");
                         String photoUrl = documentSnapshot.getString("photoUrl");
 
-                        if (nickName == null) {
-                            nickName = "";
-                        }
+                        etNickName.setText(nickName != null ? nickName : "");
+                        etFullName.setText(fullName != null ? fullName : "");
+                        etEmail.setText(email != null ? email : currentUser.getEmail());
 
-                        if (fullName == null) {
-                            fullName = "";
-                        }
-
-                        if (email == null || email.isEmpty()) {
-                            email = currentUser.getEmail();
-                        }
-
-                        if (email == null) {
-                            email = "";
-                        }
-
-                        etNickName.setText(nickName);
-                        etFullName.setText(fullName);
-                        etEmail.setText(email);
-
-                        // Tampilkan foto profil jika sudah ada
                         tampilkanFotoProfil(photoUrl, fullName);
-
-                    } else {
-                        Toast.makeText(
-                                requireContext(),
-                                "Data user tidak ditemukan",
-                                Toast.LENGTH_SHORT
-                        ).show();
                     }
-                })
-                .addOnFailureListener(e -> {
-                    Toast.makeText(
-                            requireContext(),
-                            "Gagal mengambil data akun: " + e.getMessage(),
-                            Toast.LENGTH_LONG
-                    ).show();
                 });
     }
 
-    private void setProfileInitial(String name) {
-
-        if (name != null && !name.trim().isEmpty()) {
-            String initial = name.trim().substring(0, 1).toUpperCase();
-            tvProfilePlaceholder.setText(initial);
-        } else {
-            tvProfilePlaceholder.setText("U");
-        }
-    }
-
     private void tampilkanFotoProfil(String photoUrl, String fullName) {
-
         if (photoUrl != null && !photoUrl.trim().isEmpty()) {
-
             ivProfileImage.setVisibility(View.VISIBLE);
             tvProfilePlaceholder.setVisibility(View.GONE);
-
-            Glide.with(this)
-                    .load(photoUrl)
-                    .centerCrop()
-                    .into(ivProfileImage);
-
+            Glide.with(this).load(photoUrl).centerCrop().into(ivProfileImage);
         } else {
-
             ivProfileImage.setVisibility(View.GONE);
             tvProfilePlaceholder.setVisibility(View.VISIBLE);
-            setProfileInitial(fullName);
+            if (fullName != null && !fullName.isEmpty()) {
+                tvProfilePlaceholder.setText(fullName.substring(0, 1).toUpperCase());
+            }
         }
-    }
-
-    private File uriToFile(Uri uri) throws Exception {
-
-        File file = new File(requireContext().getCacheDir(), "profile_image.jpg");
-
-        InputStream inputStream =
-                requireContext().getContentResolver().openInputStream(uri);
-
-        FileOutputStream outputStream =
-                new FileOutputStream(file);
-
-        byte[] buffer = new byte[1024];
-        int length;
-
-        while ((length = inputStream.read(buffer)) > 0) {
-            outputStream.write(buffer, 0, length);
-        }
-
-        outputStream.close();
-        inputStream.close();
-
-        return file;
     }
 
     private void updateDataProfilDanEmail() {
-
         FirebaseUser currentUser = auth.getCurrentUser();
-
-        if (currentUser == null) {
-            Toast.makeText(requireContext(), "User belum login", Toast.LENGTH_SHORT).show();
-            return;
-        }
+        if (currentUser == null) return;
 
         String nickName = etNickName.getText().toString().trim();
         String fullName = etFullName.getText().toString().trim();
         String newEmail = etEmail.getText().toString().trim();
         String oldPassword = etOldPassword.getText().toString().trim();
 
-        if (nickName.isEmpty()) {
-            etNickName.setError("Nama panggilan tidak boleh kosong");
-            etNickName.requestFocus();
-            return;
-        }
-
-        if (fullName.isEmpty()) {
-            etFullName.setError("Nama lengkap tidak boleh kosong");
-            etFullName.requestFocus();
-            return;
-        }
-
-        if (newEmail.isEmpty()) {
-            etEmail.setError("Email tidak boleh kosong");
-            etEmail.requestFocus();
-            return;
-        }
-
-        if (!Patterns.EMAIL_ADDRESS.matcher(newEmail).matches()) {
-            etEmail.setError("Format email tidak valid");
-            etEmail.requestFocus();
+        if (nickName.isEmpty() || fullName.isEmpty() || newEmail.isEmpty()) {
+            tvWarning.setVisibility(View.VISIBLE);
             return;
         }
 
         btnUpdateProfile.setEnabled(false);
-        tvWarning.setVisibility(View.GONE);
-
-        String uid = currentUser.getUid();
         String currentEmail = currentUser.getEmail();
 
-        if (currentEmail == null) {
-            currentEmail = "";
-        }
-
-        /*
-         * Jika email tidak berubah,
-         * langsung update data Firestore dan upload foto jika ada.
-         */
         if (newEmail.equals(currentEmail)) {
-            updateFirestoreUser(uid, nickName, fullName, newEmail);
-            return;
-        }
-
-        /*
-         * Jika email berubah, user wajib memasukkan password lama.
-         */
-        if (oldPassword.isEmpty()) {
-            btnUpdateProfile.setEnabled(true);
-
-            tvWarning.setText("Isi Password Lama untuk mengubah email!");
-            tvWarning.setVisibility(View.VISIBLE);
-
-            etOldPassword.requestFocus();
-            return;
-        }
-
-        showLoading("Menyimpan perubahan...");
-
-        AuthCredential credential =
-                EmailAuthProvider.getCredential(currentEmail, oldPassword);
-
-        currentUser.reauthenticate(credential)
-                .addOnSuccessListener(unused -> {
-
-                    currentUser.updateEmail(newEmail)
-                            .addOnSuccessListener(unusedEmail -> {
-
-                                // Setelah email Firebase Auth berhasil berubah,
-                                // lanjut update Firestore dan upload foto jika ada
-                                updateFirestoreUser(uid, nickName, fullName, newEmail);
-
-                            })
-                            .addOnFailureListener(e -> {
-                                hideLoading();
-                                btnUpdateProfile.setEnabled(true);
-
-                                Toast.makeText(
-                                        requireContext(),
-                                        "Gagal mengubah email: " + e.getMessage(),
-                                        Toast.LENGTH_LONG
-                                ).show();
-                            });
-
-                })
-                .addOnFailureListener(e -> {
+            updateFirestoreUser(currentUser.getUid(), nickName, fullName, newEmail);
+        } else {
+            if (oldPassword.isEmpty()) {
+                btnUpdateProfile.setEnabled(true);
+                tvWarning.setText("Isi Password Lama untuk mengubah email!");
+                tvWarning.setVisibility(View.VISIBLE);
+                return;
+            }
+            showLoading("Menyimpan perubahan...");
+            AuthCredential credential = EmailAuthProvider.getCredential(currentEmail, oldPassword);
+            currentUser.reauthenticate(credential).addOnSuccessListener(unused -> {
+                currentUser.updateEmail(newEmail).addOnSuccessListener(unusedEmail -> {
+                    updateFirestoreUser(currentUser.getUid(), nickName, fullName, newEmail);
+                }).addOnFailureListener(e -> {
                     hideLoading();
                     btnUpdateProfile.setEnabled(true);
-
-                    tvWarning.setText("Password lama salah atau verifikasi gagal!");
-                    tvWarning.setVisibility(View.VISIBLE);
-
-                    Toast.makeText(
-                            requireContext(),
-                            "Verifikasi gagal: " + e.getMessage(),
-                            Toast.LENGTH_LONG
-                    ).show();
+                    Toast.makeText(requireContext(), "Gagal: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
+            }).addOnFailureListener(e -> {
+                hideLoading();
+                btnUpdateProfile.setEnabled(true);
+                tvWarning.setText("Password salah!");
+                tvWarning.setVisibility(View.VISIBLE);
+            });
+        }
     }
 
-    private void updateFirestoreUser(
-            String uid,
-            String nickName,
-            String fullName,
-            String email
-    ) {
-
-        showLoading("Menyimpan perubahan...");
-
+    private void updateFirestoreUser(String uid, String nickName, String fullName, String email) {
+        showLoading("Menyimpan...");
         if (selectedImageUri != null) {
-
-            uploadFotoKeCloudinary(
-                    uid,
-                    nickName,
-                    fullName,
-                    email
-            );
-
+            uploadFotoKeCloudinary(uid, nickName, fullName, email);
         } else {
-
-            simpanDataUserKeFirestore(
-                    uid,
-                    nickName,
-                    fullName,
-                    email,
-                    null
-            );
+            simpanDataUserKeFirestore(uid, nickName, fullName, email, null);
         }
     }
 
-    private void uploadFotoKeCloudinary(
-            String uid,
-            String nickName,
-            String fullName,
-            String email
-    ) {
-
+    private void uploadFotoKeCloudinary(String uid, String nickName, String fullName, String email) {
         try {
-
-            String CLOUD_NAME = "ddver48sg";
-            String UPLOAD_PRESET = "greenhouse_profile";
-
             File file = uriToFile(selectedImageUri);
+            RequestBody requestFile = RequestBody.create(file, MediaType.parse("image/*"));
+            MultipartBody.Part body = MultipartBody.Part.createFormData("file", file.getName(), requestFile);
+            RequestBody uploadPreset = RequestBody.create("greenhouse_profile", MediaType.parse("text/plain"));
 
-            RequestBody requestFile =
-                    RequestBody.create(
-                            file,
-                            MediaType.parse("image/*")
-                    );
+            Retrofit retrofit = new Retrofit.Builder().baseUrl("https://api.cloudinary.com/").addConverterFactory(GsonConverterFactory.create()).build();
+            CloudinaryApi api = retrofit.create(CloudinaryApi.class);
 
-            MultipartBody.Part body =
-                    MultipartBody.Part.createFormData(
-                            "file",
-                            file.getName(),
-                            requestFile
-                    );
-
-            RequestBody uploadPreset =
-                    RequestBody.create(
-                            UPLOAD_PRESET,
-                            MediaType.parse("text/plain")
-                    );
-
-            Retrofit retrofit = new Retrofit.Builder()
-                    .baseUrl("https://api.cloudinary.com/")
-                    .addConverterFactory(GsonConverterFactory.create())
-                    .build();
-
-            CloudinaryApi api =
-                    retrofit.create(CloudinaryApi.class);
-
-            api.uploadImage(
-                            CLOUD_NAME,
-                            body,
-                            uploadPreset
-                    )
-                    .enqueue(new retrofit2.Callback<CloudinaryResponse>() {
-
-                        @Override
-                        public void onResponse(
-                                retrofit2.Call<CloudinaryResponse> call,
-                                retrofit2.Response<CloudinaryResponse> response
-                        ) {
-
-                            if (response.isSuccessful()
-                                    && response.body() != null
-                                    && response.body().getSecureUrl() != null) {
-
-                                String photoUrl =
-                                        response.body().getSecureUrl();
-
-                                simpanDataUserKeFirestore(
-                                        uid,
-                                        nickName,
-                                        fullName,
-                                        email,
-                                        photoUrl
-                                );
-
-                            } else {
-
-                                hideLoading();
-
-                                Toast.makeText(
-                                        requireContext(),
-                                        "Upload gagal",
-                                        Toast.LENGTH_LONG
-                                ).show();
-                            }
-                        }
-
-                        @Override
-                        public void onFailure(
-                                retrofit2.Call<CloudinaryResponse> call,
-                                Throwable t
-                        ) {
-
-                            hideLoading();
-
-                            Toast.makeText(
-                                    requireContext(),
-                                    "Error: " + t.getMessage(),
-                                    Toast.LENGTH_LONG
-                            ).show();
-                        }
-                    });
-
+            api.uploadImage("ddver48sg", body, uploadPreset).enqueue(new retrofit2.Callback<CloudinaryResponse>() {
+                @Override
+                public void onResponse(retrofit2.Call<CloudinaryResponse> call, retrofit2.Response<CloudinaryResponse> response) {
+                    if (response.isSuccessful() && response.body() != null) {
+                        simpanDataUserKeFirestore(uid, nickName, fullName, email, response.body().getSecureUrl());
+                    } else {
+                        hideLoading();
+                        btnUpdateProfile.setEnabled(true);
+                        Toast.makeText(requireContext(), "Upload gagal", Toast.LENGTH_SHORT).show();
+                    }
+                }
+                @Override
+                public void onFailure(retrofit2.Call<CloudinaryResponse> call, Throwable t) {
+                    hideLoading();
+                    btnUpdateProfile.setEnabled(true);
+                }
+            });
         } catch (Exception e) {
-
             hideLoading();
-
-            Toast.makeText(
-                    requireContext(),
-                    "Gagal membaca foto",
-                    Toast.LENGTH_LONG
-            ).show();
+            btnUpdateProfile.setEnabled(true);
         }
     }
 
-    private void simpanDataUserKeFirestore(
-            String uid,
-            String nickName,
-            String fullName,
-            String email,
-            @Nullable String photoUrl
-    ) {
+    private void simpanDataUserKeFirestore(String uid, String nickName, String fullName, String email, @Nullable String photoUrl) {
         Map<String, Object> data = new HashMap<>();
         data.put("nickName", nickName);
         data.put("fullName", fullName);
         data.put("email", email);
         data.put("updatedAt", FieldValue.serverTimestamp());
+        if (photoUrl != null) data.put("photoUrl", photoUrl);
 
-        // Simpan URL foto hanya jika ada foto baru
-        if (photoUrl != null) {
-            data.put("photoUrl", photoUrl);
-        }
-
-        db.collection("users")
-                .document(uid)
-                .update(data)
-                .addOnSuccessListener(unused -> {
-
-                    hideLoading();
-                    btnUpdateProfile.setEnabled(true);
-
-                    // Reset URI foto agar tidak upload ulang
-                    selectedImageUri = null;
-
-                    setProfileInitial(fullName);
-
-                    Toast.makeText(
-                            requireContext(),
-                            "Data akun berhasil diperbarui",
-                            Toast.LENGTH_SHORT
-                    ).show();
-
-                    backToProfileSmooth();
-                })
-                .addOnFailureListener(e -> {
-
-                    hideLoading();
-                    btnUpdateProfile.setEnabled(true);
-
-                    Toast.makeText(
-                            requireContext(),
-                            "Gagal memperbarui data: " + e.getMessage(),
-                            Toast.LENGTH_LONG
-                    ).show();
-                });
+        db.collection("users").document(uid).update(data).addOnSuccessListener(unused -> {
+            hideLoading();
+            Toast.makeText(requireContext(), "Berhasil diperbarui", Toast.LENGTH_SHORT).show();
+            backToProfileSmooth();
+        }).addOnFailureListener(e -> {
+            hideLoading();
+            btnUpdateProfile.setEnabled(true);
+        });
     }
 
     private void updatePasswordUser() {
+        FirebaseUser user = auth.getCurrentUser();
+        String oldPass = etOldPassword.getText().toString().trim();
+        String newPass = etNewPassword.getText().toString().trim();
 
-        FirebaseUser currentUser = auth.getCurrentUser();
-
-        if (currentUser == null) {
-            Toast.makeText(requireContext(), "User belum login", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        String oldPassword = etOldPassword.getText().toString().trim();
-        String newPassword = etNewPassword.getText().toString().trim();
-
-        if (oldPassword.isEmpty() || newPassword.isEmpty()) {
-            tvWarning.setText("Harap isi password secara lengkap!");
+        if (oldPass.isEmpty() || newPass.length() < 8) {
+            tvWarning.setText("Password minimal 8 karakter!");
             tvWarning.setVisibility(View.VISIBLE);
             return;
         }
 
-        if (newPassword.length() < 8) {
-            etNewPassword.setError("Password baru minimal 8 karakter");
-            etNewPassword.requestFocus();
-            return;
-        }
-
-        String currentEmail = currentUser.getEmail();
-
-        if (currentEmail == null || currentEmail.isEmpty()) {
-            Toast.makeText(requireContext(), "Email user tidak ditemukan", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
         btnSaveChangesPassword.setEnabled(false);
-        tvWarning.setVisibility(View.GONE);
-
-        AuthCredential credential =
-                EmailAuthProvider.getCredential(currentEmail, oldPassword);
-
-        currentUser.reauthenticate(credential)
-                .addOnSuccessListener(unused -> {
-
-                    currentUser.updatePassword(newPassword)
-                            .addOnSuccessListener(unusedPassword -> {
-
-                                btnSaveChangesPassword.setEnabled(true);
-
-                                etOldPassword.setText("");
-                                etNewPassword.setText("");
-
-                                Toast.makeText(
-                                        requireContext(),
-                                        "Kata sandi berhasil diperbarui",
-                                        Toast.LENGTH_SHORT
-                                ).show();
-
-                            })
-                            .addOnFailureListener(e -> {
-
-                                btnSaveChangesPassword.setEnabled(true);
-
-                                Toast.makeText(
-                                        requireContext(),
-                                        "Gagal memperbarui password: " + e.getMessage(),
-                                        Toast.LENGTH_LONG
-                                ).show();
-                            });
-
-                })
-                .addOnFailureListener(e -> {
-
-                    btnSaveChangesPassword.setEnabled(true);
-
-                    tvWarning.setText("Password lama salah!");
-                    tvWarning.setVisibility(View.VISIBLE);
-
-                    Toast.makeText(
-                            requireContext(),
-                            "Verifikasi gagal: " + e.getMessage(),
-                            Toast.LENGTH_LONG
-                    ).show();
-                });
+        AuthCredential credential = EmailAuthProvider.getCredential(user.getEmail(), oldPass);
+        user.reauthenticate(credential).addOnSuccessListener(unused -> {
+            user.updatePassword(newPass).addOnSuccessListener(a -> {
+                btnSaveChangesPassword.setEnabled(true);
+                etOldPassword.setText("");
+                etNewPassword.setText("");
+                Toast.makeText(requireContext(), "Password diperbarui", Toast.LENGTH_SHORT).show();
+            });
+        }).addOnFailureListener(e -> btnSaveChangesPassword.setEnabled(true));
     }
 
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-
-        // Menampilkan kembali Bottom Navigation ketika keluar dari halaman ini
-        toggleBottomNavigation(true);
+    private File uriToFile(Uri uri) throws Exception {
+        File file = new File(requireContext().getCacheDir(), "temp_img.jpg");
+        InputStream is = requireContext().getContentResolver().openInputStream(uri);
+        FileOutputStream os = new FileOutputStream(file);
+        byte[] buffer = new byte[1024];
+        int length;
+        while ((length = is.read(buffer)) > 0) os.write(buffer, 0, length);
+        os.close(); is.close();
+        return file;
     }
 
-    private void toggleBottomNavigation(boolean show) {
-
-        if (getActivity() instanceof MainActivity) {
-
-            BottomNavigationView bottomNav =
-                    getActivity().findViewById(R.id.bottomNavigationView);
-
-            if (bottomNav != null) {
-                bottomNav.setVisibility(show ? View.VISIBLE : View.GONE);
-            }
-        }
+    private void showLoading(String msg) {
+        if (!isAdded()) return;
+        ProgressBar pb = new ProgressBar(requireContext());
+        loadingDialog = new AlertDialog.Builder(requireContext()).setView(pb).setCancelable(false).create();
+        loadingDialog.show();
     }
 
-    private void backToProfileSmooth() {
-
-        if (!isAdded()) {
-            return;
-        }
-
-        requireView().postDelayed(() -> {
-            if (isAdded()) {
-                getParentFragmentManager().popBackStack();
-            }
-        }, 250);
+    private void hideLoading() {
+        if (loadingDialog != null && loadingDialog.isShowing()) loadingDialog.dismiss();
     }
 }
