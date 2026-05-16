@@ -239,6 +239,7 @@
                             android:layout_height="wrap_content"
                             android:layout_gravity="center_horizontal"
                             android:gravity="center_vertical"
+                            android:layout_marginTop="10dp"
                             android:orientation="horizontal">
 
                             <View
@@ -336,7 +337,8 @@
                             android:layout_height="wrap_content"
                             android:layout_gravity="center_horizontal"
                             android:gravity="center_vertical"
-                            android:orientation="horizontal">
+                            android:orientation="horizontal"
+                            android:layout_marginTop="10dp">
 
                             <View
                                 android:layout_width="12dp"
