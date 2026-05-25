@@ -21,6 +21,7 @@ import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter;
+import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 
@@ -29,13 +30,12 @@ import java.util.List;
 
 public class HomeFragment extends Fragment {
 
-    private TextView tvTabSuhu, tvTabKelembapan, tvUserName;
+    private TextView tvUserName;
+    private TextView tvLampuStatus, tvPompaStatus;
+    private SwitchMaterial switchLampu, switchPompa;
     private LineChart lineChart;
 
-    // FirebaseAuth untuk mengambil user yang sedang login
     private FirebaseAuth auth;
-
-    // Firestore untuk mengambil data user dari database
     private FirebaseFirestore db;
 
     public HomeFragment() {
@@ -54,47 +54,58 @@ public class HomeFragment extends Fragment {
                 false);
 
         // Inisialisasi View
-        tvTabSuhu = view.findViewById(R.id.tvTabSuhu);
-        tvTabKelembapan = view.findViewById(R.id.tvTabKelembapan);
+        tvUserName = view.findViewById(R.id.tvUserName);
+        tvLampuStatus = view.findViewById(R.id.tvLampuStatus);
+        tvPompaStatus = view.findViewById(R.id.tvPompaStatus);
+        
+        switchLampu = view.findViewById(R.id.switchLampu);
+        switchPompa = view.findViewById(R.id.switchPompa);
+        
         lineChart = view.findViewById(R.id.lineChart);
 
-        // Inisialisasi nama user
-        tvUserName = view.findViewById(R.id.tvUserName);
-
-        // --- AMBIL NAMA DARI CACHE AGAR INSTAN (Mencegah Flicker) ---
-        if (isAdded()) {
+        // --- AMBIL NAMA DARI CACHE ---
+        if (isAdded() && tvUserName != null) {
             SharedPreferences prefs = requireContext().getSharedPreferences("user_prefs", Context.MODE_PRIVATE);
-            String savedName = prefs.getString("nickName", "User");
-            tvUserName.setText(savedName);
+            tvUserName.setText(prefs.getString("nickName", "User"));
         }
 
         // Inisialisasi Firebase
         auth = FirebaseAuth.getInstance();
         db = FirebaseFirestore.getInstance();
 
-        // Ambil nama panggilan terbaru dari database
         ambilNamaPanggilan();
         
-        // Setup Chart
-        setupLineChart();
+        // Setup Grafik
+        if (lineChart != null) {
+            setupLineChart();
+            showChartData();
+        }
 
-        // Status awal
-        tvTabSuhu.setSelected(true);
-        showChartData("Suhu");
+        // --- LOGIKA SWITCH LAMPU ---
+        if (switchLampu != null) {
+            switchLampu.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                if (isChecked) {
+                    if (tvLampuStatus != null) tvLampuStatus.setText("On");
+                    Toast.makeText(requireContext(), "Lampu Dinyalakan", Toast.LENGTH_SHORT).show();
+                } else {
+                    if (tvLampuStatus != null) tvLampuStatus.setText("Off");
+                    Toast.makeText(requireContext(), "Lampu Dimatikan", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
 
-        // Klik Tab Suhu
-        tvTabSuhu.setOnClickListener(v -> {
-            tvTabSuhu.setSelected(true);
-            tvTabKelembapan.setSelected(false);
-            showChartData("Suhu");
-        });
-
-        // Klik Tab Kelembapan
-        tvTabKelembapan.setOnClickListener(v -> {
-            tvTabKelembapan.setSelected(true);
-            tvTabSuhu.setSelected(false);
-            showChartData("Kelembapan");
-        });
+        // --- LOGIKA SWITCH POMPA ---
+        if (switchPompa != null) {
+            switchPompa.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                if (isChecked) {
+                    if (tvPompaStatus != null) tvPompaStatus.setText("On");
+                    Toast.makeText(requireContext(), "Pompa Air ON", Toast.LENGTH_SHORT).show();
+                } else {
+                    if (tvPompaStatus != null) tvPompaStatus.setText("Off");
+                    Toast.makeText(requireContext(), "Pompa Air OFF", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
 
         return view;
     }
@@ -102,141 +113,76 @@ public class HomeFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-
-        // Ambil ulang nama saat kembali ke HomeFragment
         if (auth != null && db != null && tvUserName != null) {
             ambilNamaPanggilan();
         }
     }
 
     private void ambilNamaPanggilan() {
-
-        // Pastikan user sudah login
-        if (auth.getCurrentUser() == null) {
-            return;
-        }
-
-        // Ambil UID user yang sedang login
+        if (auth.getCurrentUser() == null) return;
         String uid = auth.getCurrentUser().getUid();
 
-        // Ambil data user dari Firestore
         db.collection("users")
                 .document(uid)
                 .get()
                 .addOnSuccessListener(documentSnapshot -> {
-
                     if (documentSnapshot.exists()) {
-
-                        // Ambil field nickName dari Firestore
                         String nickName = documentSnapshot.getString("nickName");
-
-                        // Jika nickName kosong, pakai default User
                         if (nickName == null || nickName.isEmpty()) {
                             nickName = "User";
                         }
 
-                        // --- SIMPAN KE CACHE UNTUK PEMBUKAAN BERIKUTNYA ---
                         if (isAdded()) {
-                            SharedPreferences prefs = requireContext().getSharedPreferences("user_prefs", Context.MODE_PRIVATE);
-                            SharedPreferences.Editor editor = prefs.edit();
+                            SharedPreferences.Editor editor = requireContext().getSharedPreferences("user_prefs", Context.MODE_PRIVATE).edit();
                             editor.putString("nickName", nickName);
                             editor.apply();
                         }
 
-                        // Tampilkan nama panggilan ke halaman beranda
                         if (tvUserName != null) {
                             tvUserName.setText(nickName);
                         }
-
-                    } else {
-                        if (getContext() != null) {
-                            Toast.makeText(
-                                    getContext(),
-                                    "Data user tidak ditemukan",
-                                    Toast.LENGTH_SHORT
-                            ).show();
-                        }
-                    }
-                })
-                .addOnFailureListener(e -> {
-                    if (getContext() != null) {
-                        Toast.makeText(
-                                getContext(),
-                                "Gagal mengambil nama: " + e.getMessage(),
-                                Toast.LENGTH_SHORT
-                        ).show();
                     }
                 });
     }
 
     private void setupLineChart() {
         if (lineChart == null) return;
-        
         lineChart.getDescription().setEnabled(false);
         lineChart.setDrawGridBackground(false);
         lineChart.getLegend().setEnabled(false);
 
-        // X Axis
         XAxis xAxis = lineChart.getXAxis();
         xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
         xAxis.setDrawGridLines(false);
-        xAxis.setGranularity(1f);
-        xAxis.setLabelCount(7);
+        xAxis.setValueFormatter(new IndexAxisValueFormatter(new String[]{"Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"}));
 
-        xAxis.setValueFormatter(
-                new IndexAxisValueFormatter(
-                        new String[]{
-                                "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"
-                        }
-                )
-        );
-
-        // Y Axis
         lineChart.getAxisRight().setEnabled(false);
         lineChart.getAxisLeft().setDrawGridLines(true);
         lineChart.getAxisLeft().setGridColor(Color.LTGRAY);
         lineChart.getAxisLeft().setAxisMinimum(0f);
     }
 
-    private void showChartData(String type) {
+    private void showChartData() {
         if (lineChart == null) return;
 
         List<Entry> entries = new ArrayList<>();
+        entries.add(new Entry(0, 60f));
+        entries.add(new Entry(1, 65f));
+        entries.add(new Entry(2, 62f));
+        entries.add(new Entry(3, 70f));
+        entries.add(new Entry(4, 68f));
+        entries.add(new Entry(5, 75f));
+        entries.add(new Entry(6, 72f));
 
-        if (type.equals("Suhu")) {
-            entries.add(new Entry(0, 25f));
-            entries.add(new Entry(1, 27f));
-            entries.add(new Entry(2, 26f));
-            entries.add(new Entry(3, 28f));
-            entries.add(new Entry(4, 27f));
-            entries.add(new Entry(5, 29f));
-            entries.add(new Entry(6, 28f));
-
-        } else {
-            entries.add(new Entry(0, 60f));
-            entries.add(new Entry(1, 65f));
-            entries.add(new Entry(2, 62f));
-            entries.add(new Entry(3, 70f));
-            entries.add(new Entry(4, 68f));
-            entries.add(new Entry(5, 75f));
-            entries.add(new Entry(6, 72f));
-
-        }
-
-        LineDataSet dataSet = new LineDataSet(entries, type);
+        LineDataSet dataSet = new LineDataSet(entries, "Kelembapan");
         dataSet.setColor(Color.parseColor("#45553D"));
         dataSet.setCircleColor(Color.parseColor("#45553D"));
         dataSet.setLineWidth(2f);
-        dataSet.setCircleRadius(4f);
-        dataSet.setDrawCircleHole(true);
-        dataSet.setValueTextSize(10f);
         dataSet.setMode(LineDataSet.Mode.CUBIC_BEZIER);
         dataSet.setDrawFilled(true);
         dataSet.setFillColor(Color.parseColor("#E1BEE7"));
 
-        LineData lineData = new LineData(dataSet);
-        lineChart.setData(lineData);
-        lineChart.animateX(1000);
+        lineChart.setData(new LineData(dataSet));
         lineChart.invalidate();
     }
 }
