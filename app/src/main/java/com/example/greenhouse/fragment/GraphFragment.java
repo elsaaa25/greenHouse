@@ -17,8 +17,8 @@ import com.example.greenhouse.R;
 public class GraphFragment extends Fragment {
 
     private TextView btnMinggu, btnBulan;
-    private LineChartView lineChartSuhu, lineChartKelembapan;
-    private LinearLayout labelsSuhu, labelsKelembapan;
+    private LineChartView lineChartKelembapan;
+    private LinearLayout labelsKelembapan;
 
     @Nullable
     @Override
@@ -30,51 +30,73 @@ public class GraphFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        // Inisialisasi komponen dengan aman
         btnMinggu = view.findViewById(R.id.btnMinggu);
         btnBulan = view.findViewById(R.id.btnBulan);
-        lineChartSuhu = view.findViewById(R.id.lineChartSuhu);
         lineChartKelembapan = view.findViewById(R.id.lineChartKelembapan);
-        labelsSuhu = view.findViewById(R.id.labelsSuhu);
         labelsKelembapan = view.findViewById(R.id.labelsKelembapan);
 
-        btnMinggu.setOnClickListener(v -> selectMinggu());
-        btnBulan.setOnClickListener(v -> selectBulan());
+        // Set listener hanya jika komponen ditemukan di XML
+        if (btnMinggu != null) {
+            btnMinggu.setOnClickListener(v -> selectMinggu());
+        }
+        if (btnBulan != null) {
+            btnBulan.setOnClickListener(v -> selectBulan());
+        }
 
-        // Default: Minggu
-        selectMinggu();
+        // Jalankan pilihan default jika komponen ada
+        if (btnMinggu != null) {
+            selectMinggu();
+        }
     }
 
     private void selectMinggu() {
-        btnMinggu.setBackgroundResource(R.drawable.bg_filter_selected);
-        btnMinggu.setTextColor(ContextCompat.getColor(requireContext(), android.R.color.white));
-        btnBulan.setBackgroundResource(R.drawable.bg_filter_unselected);
-        btnBulan.setTextColor(ContextCompat.getColor(requireContext(), R.color.green_secondary));
+        if (!isAdded()) return;
+        
+        if (btnMinggu != null) {
+            btnMinggu.setBackgroundResource(R.drawable.bg_filter_selected);
+            btnMinggu.setTextColor(ContextCompat.getColor(requireContext(), android.R.color.white));
+        }
+        
+        if (btnBulan != null) {
+            btnBulan.setBackgroundResource(R.drawable.bg_filter_unselected);
+            btnBulan.setTextColor(ContextCompat.getColor(requireContext(), R.color.green_secondary));
+        }
 
         updateCharts("minggu");
     }
 
     private void selectBulan() {
-        btnBulan.setBackgroundResource(R.drawable.bg_filter_selected);
-        btnBulan.setTextColor(ContextCompat.getColor(requireContext(), android.R.color.white));
-        btnMinggu.setBackgroundResource(R.drawable.bg_filter_unselected);
-        btnMinggu.setTextColor(ContextCompat.getColor(requireContext(), R.color.green_secondary));
+        if (!isAdded()) return;
+
+        if (btnBulan != null) {
+            btnBulan.setBackgroundResource(R.drawable.bg_filter_selected);
+            btnBulan.setTextColor(ContextCompat.getColor(requireContext(), android.R.color.white));
+        }
+        
+        if (btnMinggu != null) {
+            btnMinggu.setBackgroundResource(R.drawable.bg_filter_unselected);
+            btnMinggu.setTextColor(ContextCompat.getColor(requireContext(), R.color.green_secondary));
+        }
 
         updateCharts("bulan");
     }
 
     private void updateCharts(String filter) {
-        labelsSuhu.removeAllViews();
+        // PERBAIKAN: Jika labelsKelembapan tidak ada di XML, jangan jalankan kode di bawahnya
+        if (labelsKelembapan == null) return;
+
         labelsKelembapan.removeAllViews();
 
         if (filter.equals("minggu")) {
             String[] days = {"Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"};
             double[] values = {67.21, 36.52, 67.11, 48.68, 68.5, 94.26, 62.55};
 
-            lineChartSuhu.setData(values);
-            lineChartKelembapan.setData(values);
+            if (lineChartKelembapan != null) {
+                lineChartKelembapan.setData(values);
+            }
 
             for (String day : days) {
-                addLabel(labelsSuhu, day);
                 addLabel(labelsKelembapan, day);
             }
         } else {
@@ -82,16 +104,16 @@ public class GraphFragment extends Fragment {
             double[] values = new double[dates.length];
             for (int i = 0; i < dates.length; i++) {
                 values[i] = Math.random() * 80 + 20;
-                addLabel(labelsSuhu, dates[i]);
                 addLabel(labelsKelembapan, dates[i]);
             }
-            lineChartSuhu.setData(values);
-            lineChartKelembapan.setData(values);
+            if (lineChartKelembapan != null) {
+                lineChartKelembapan.setData(values);
+            }
         }
     }
 
     private void addLabel(LinearLayout container, String label) {
-        if (getContext() == null) return;
+        if (getContext() == null || container == null) return;
         TextView tv = new TextView(getContext());
         tv.setText(label);
         tv.setTextSize(10);

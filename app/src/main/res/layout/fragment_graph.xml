@@ -17,6 +17,7 @@
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:padding="24dp"
+        android:elevation="8dp"
         app:layout_constraintTop_toTopOf="parent">
 
         <LinearLayout
@@ -28,7 +29,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Histori dan Grafik Sensor"
+                android:text="Histori dan Grafik"
                 android:textColor="@color/white"
                 android:textSize="22sp"
                 android:textStyle="bold"
@@ -37,13 +38,12 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Data histori suhu, kelembapan dan penyiraman"
+                android:text="Data histori kelembapan tanaman"
                 android:textColor="@color/white"
                 android:textSize="12sp"
                 android:fontFamily="@font/poppins"/>
         </LinearLayout>
     </LinearLayout>
-
 
     <!-- Filters -->
     <LinearLayout
@@ -97,194 +97,18 @@
             android:paddingHorizontal="24dp"
             android:paddingBottom="24dp">
 
-            <!-- Data Sensor Suhu -->
-            <TextView
-                android:id="@+id/tvLabelSuhu"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:text="Data Sensor Suhu (per hari)"
-                android:textColor="#000000"
-                android:textSize="14sp"
-                android:fontFamily="@font/poppins"/>
-
-            <androidx.cardview.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="250dp"
-                android:layout_marginTop="8dp"
-                app:cardCornerRadius="20dp"
-                app:cardElevation="0dp"
-                app:cardBackgroundColor="#FFFFFF"
-                app:strokeWidth="1dp"
-                app:strokeColor="#000000">
-
-                <RelativeLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:padding="16dp">
-
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="match_parent"
-                        android:layout_marginBottom="40dp"
-                        android:gravity="end"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="0dp"
-                            android:layout_weight="1"
-                            android:gravity="top"
-                            android:text="100"
-                            android:textSize="12sp"
-                            android:fontFamily="@font/poppins"/>
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="0dp"
-                            android:layout_weight="1"
-                            android:gravity="top"
-                            android:text="80"
-                            android:textSize="12sp"
-                            android:fontFamily="@font/poppins"/>
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="0dp"
-                            android:layout_weight="1"
-                            android:gravity="top"
-                            android:text="60"
-                            android:textSize="12sp"
-                            android:fontFamily="@font/poppins"/>
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="0dp"
-                            android:layout_weight="1"
-                            android:gravity="top"
-                            android:text="40"
-                            android:textSize="12sp"
-                            android:fontFamily="@font/poppins"/>
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="0dp"
-                            android:layout_weight="1"
-                            android:gravity="top"
-                            android:text="20"
-                            android:textSize="12sp"
-                            android:fontFamily="@font/poppins"/>
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="0"
-                            android:textSize="12sp"
-                            android:fontFamily="@font/poppins"/>
-                    </LinearLayout>
-
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:layout_alignParentTop="true"
-                        android:layout_marginStart="30dp"
-                        android:layout_marginTop="10dp"
-                        android:background="#EEEEEE" />
-
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:layout_centerVertical="true"
-                        android:layout_marginStart="30dp"
-                        android:background="#EEEEEE" />
-
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:layout_alignParentBottom="true"
-                        android:layout_marginStart="30dp"
-                        android:layout_marginBottom="55dp"
-                        android:background="#000000" />
-
-                    <com.example.greenhouse.fragment.LineChartView
-                        android:id="@+id/lineChartSuhu"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:layout_marginStart="30dp"
-                        android:layout_marginBottom="40dp"
-                        android:paddingStart="20dp"
-                        android:paddingEnd="20dp" />
-
-                    <LinearLayout
-                        android:id="@+id/labelsSuhu"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentBottom="true"
-                        android:layout_marginStart="30dp"
-                        android:layout_marginBottom="20dp"
-                        android:orientation="horizontal">
-
-                    </LinearLayout>
-
-                    <!-- Legenda Suhu -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentBottom="true"
-                        android:orientation="vertical">
-
-                        <!-- Rata-rata (Tengah) -->
-                        <LinearLayout
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_gravity="center_horizontal"
-                            android:gravity="center_vertical"
-                            android:layout_marginTop="10dp"
-                            android:orientation="horizontal">
-
-                            <View
-                                android:layout_width="12dp"
-                                android:layout_height="12dp"
-                                android:background="#9575CD" />
-
-                            <TextView
-                                android:id="@+id/tvAvgSuhu"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginStart="8dp"
-                                android:text="Rata-rata : 61%"
-                                android:textSize="12sp"
-                                android:fontFamily="@font/poppins"/>
-                        </LinearLayout>
-
-                        <!-- Suhu Optimal (Kiri) -->
-                        <TextView
-                            android:id="@+id/tvOptimalSuhu"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="30dp"
-                            android:layout_gravity="start"
-                            android:text="suhu optimal = "
-                            android:textColor="#757575"
-                            android:textSize="12sp"
-                            android:fontFamily="@font/poppins"/>
-                    </LinearLayout>
-
-                </RelativeLayout>
-            </androidx.cardview.widget.CardView>
-
             <TextView
                 android:id="@+id/tvLabelKelembapan"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
+                android:layout_marginTop="16dp"
                 android:text="Data Sensor Kelembapan (per hari)"
                 android:textColor="#000000"
                 android:textSize="14sp"  android:fontFamily="@font/poppins"/>
 
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
-                android:layout_height="250dp"
+                android:layout_height="280dp"
                 android:layout_marginTop="8dp"
                 app:cardCornerRadius="20dp"
                 app:cardElevation="0dp"
@@ -299,18 +123,18 @@
 
                     <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="100" android:layout_alignParentTop="true" android:textSize="12sp" android:fontFamily="@font/poppins"/>
                     <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="50" android:layout_centerVertical="true" android:textSize="12sp"  android:fontFamily="@font/poppins"/>
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0" android:layout_alignParentBottom="true" android:layout_marginBottom="40dp" android:textSize="12sp" android:fontFamily="@font/poppins"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0" android:layout_alignParentBottom="true" android:layout_marginBottom="80dp" android:textSize="12sp" android:fontFamily="@font/poppins"/>
 
-                    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#EEEEEE" android:layout_alignParentTop="true" android:layout_marginTop="10dp" android:layout_marginStart="30dp"  android:fontFamily="@font/poppins"/>
-                    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#EEEEEE" android:layout_centerVertical="true" android:layout_marginStart="30dp"  android:fontFamily="@font/poppins"/>
-                    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#000000" android:layout_alignParentBottom="true" android:layout_marginBottom="55dp" android:layout_marginStart="30dp"  android:fontFamily="@font/poppins"/>
+                    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#EEEEEE" android:layout_alignParentTop="true" android:layout_marginTop="10dp" android:layout_marginStart="30dp" />
+                    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#EEEEEE" android:layout_centerVertical="true" android:layout_marginStart="30dp" />
+                    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#000000" android:layout_alignParentBottom="true" android:layout_marginBottom="95dp" android:layout_marginStart="30dp" />
 
                     <com.example.greenhouse.fragment.LineChartView
                         android:id="@+id/lineChartKelembapan"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:layout_marginStart="30dp"
-                        android:layout_marginBottom="40dp"
+                        android:layout_marginBottom="80dp"
                         android:paddingStart="20dp"
                         android:paddingEnd="20dp" />
 
@@ -320,31 +144,24 @@
                         android:layout_height="wrap_content"
                         android:layout_alignParentBottom="true"
                         android:layout_marginStart="30dp"
-                        android:layout_marginBottom="20dp"
-                        android:orientation="horizontal">
-                    </LinearLayout>
+                        android:layout_marginBottom="55dp"
+                        android:orientation="horizontal" />
 
                     <!-- Container Legenda Kelembapan -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_alignParentBottom="true"
+                        android:layout_marginBottom="5dp"
                         android:orientation="vertical">
 
-                        <!-- Rata-rata (Tengah) -->
                         <LinearLayout
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_gravity="center_horizontal"
                             android:gravity="center_vertical"
-                            android:orientation="horizontal"
-                            android:layout_marginTop="10dp">
-
-                            <View
-                                android:layout_width="12dp"
-                                android:layout_height="12dp"
-                                android:background="#9575CD" />
-
+                            android:orientation="horizontal">
+                            <View android:layout_width="12dp" android:layout_height="12dp" android:background="#9575CD" />
                             <TextView
                                 android:id="@+id/tvAvgKelembapan"
                                 android:layout_width="wrap_content"
@@ -354,12 +171,12 @@
                                 android:textSize="12sp"  android:fontFamily="@font/poppins"/>
                         </LinearLayout>
 
-                        <!-- Kelembapan Optimal (Kiri) -->
                         <TextView
                             android:id="@+id/tvOptimalKelembapan"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginStart="30dp"
+                            android:layout_marginStart="40dp"
+                            android:layout_marginTop="5dp"
                             android:layout_gravity="start"
                             android:text="kelembapan optimal = "
                             android:textColor="#757575"
@@ -367,8 +184,6 @@
                     </LinearLayout>
                 </RelativeLayout>
             </androidx.cardview.widget.CardView>
-
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
-
 </androidx.constraintlayout.widget.ConstraintLayout>
