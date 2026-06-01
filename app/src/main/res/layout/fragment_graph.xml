@@ -175,12 +175,13 @@
                             android:id="@+id/tvOptimalKelembapan"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:layout_gravity="start"
                             android:layout_marginStart="40dp"
                             android:layout_marginTop="5dp"
-                            android:layout_gravity="start"
-                            android:text="kelembapan optimal = "
+                            android:fontFamily="@font/poppins"
+                            android:text="Kelembapan ideal ="
                             android:textColor="#757575"
-                            android:textSize="12sp"  android:fontFamily="@font/poppins"/>
+                            android:textSize="12sp" />
                     </LinearLayout>
                 </RelativeLayout>
             </androidx.cardview.widget.CardView>
