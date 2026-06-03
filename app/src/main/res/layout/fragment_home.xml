@@ -210,7 +210,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="25dp"
-                            android:text="OFFLINE"
+                            android:text="OFF"
                             android:textColor="@color/gray_dark"
                             android:textSize="22sp"
                             android:textStyle="bold"
@@ -259,7 +259,7 @@
                             android:layout_below="@id/labelLampu"
                             android:text="OFF"
                             android:textColor="@color/gray_dark"
-                            android:textSize="24sp"
+                            android:textSize="20sp"
                             android:textStyle="bold"
                             android:fontFamily="@font/poppins" />
 
@@ -321,7 +321,7 @@
                             android:layout_below="@id/labelPompa"
                             android:text="OFF"
                             android:textColor="@color/gray_dark"
-                            android:textSize="24sp"
+                            android:textSize="20sp"
                             android:textStyle="bold"
                             android:fontFamily="@font/poppins" />
 
