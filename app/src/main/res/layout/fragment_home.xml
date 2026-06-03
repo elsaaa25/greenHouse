@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -7,7 +8,7 @@
     android:background="@color/white"
     tools:context=".fragment.HomeFragment">
 
-    <!-- 1. SCROLLVIEW -->
+    <!-- SCROLLVIEW -->
     <ScrollView
         android:id="@+id/scrollViewHome"
         android:layout_width="match_parent"
@@ -25,7 +26,7 @@
             android:orientation="vertical"
             android:paddingBottom="24dp">
 
-            <!-- Card Utama Tanaman -->
+            <!-- CARD UTAMA TANAMAN -->
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -33,7 +34,7 @@
                 android:clipToPadding="false"
                 android:layout_marginStart="20dp"
                 android:layout_marginEnd="20dp"
-                android:layout_marginBottom="-30dp" >
+                android:layout_marginBottom="-30dp">
 
                 <androidx.cardview.widget.CardView
                     android:id="@+id/cardPakcoy"
@@ -60,28 +61,31 @@
                             android:layout_height="wrap_content"
                             android:text="Tanaman yang dibudidaya"
                             android:textColor="@color/white"
-                            android:textSize="13sp"  android:fontFamily="@font/poppins" />
+                            android:textSize="13sp"
+                            android:fontFamily="@font/poppins" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="0dp"
                             android:text="Pakcoy"
                             android:textColor="@color/white"
                             android:textSize="30sp"
-                            android:textStyle="bold"   android:fontFamily="@font/poppins"/>
+                            android:textStyle="bold"
+                            android:fontFamily="@font/poppins" />
 
                         <TextView
                             android:id="@+id/tvStatus"
                             android:layout_width="130dp"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="0dp"
                             android:background="@drawable/bg_status_watering"
                             android:gravity="center"
                             android:paddingStart="8dp"
-                            android:text="Sedang Menyiram"
+                            android:paddingEnd="8dp"
+                            android:text="Monitoring Aktif"
                             android:textColor="@color/white"
-                            android:textSize="11sp"   android:fontFamily="@font/poppins"/>
+                            android:textSize="11sp"
+                            android:fontFamily="@font/poppins" />
+
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
 
@@ -95,10 +99,11 @@
                     android:src="@drawable/pakcoy"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"/>
+                    app:layout_constraintTop_toTopOf="parent" />
 
             </androidx.constraintlayout.widget.ConstraintLayout>
 
+            <!-- JUDUL SENSOR -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -106,9 +111,10 @@
                 android:layout_marginTop="18dp"
                 android:text="Sensor Real-Time"
                 android:textColor="@color/gray_dark"
-                android:textStyle="bold"  android:fontFamily="@font/poppins"/>
+                android:textStyle="bold"
+                android:fontFamily="@font/poppins" />
 
-            <!-- Baris 1: Kelembapan & Status Alat (Kotak) -->
+            <!-- BARIS 1: KELEMBAPAN & STATUS ALAT -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -116,6 +122,7 @@
                 android:layout_marginTop="8dp"
                 android:orientation="horizontal">
 
+                <!-- Card Kelembapan -->
                 <androidx.cardview.widget.CardView
                     android:layout_width="0dp"
                     android:layout_height="100dp"
@@ -124,10 +131,12 @@
                     app:cardBackgroundColor="@color/green_bg"
                     app:cardCornerRadius="16dp"
                     app:cardElevation="0dp">
+
                     <RelativeLayout
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:padding="16dp">
+
                         <ImageView
                             android:layout_width="32dp"
                             android:layout_height="32dp"
@@ -135,33 +144,39 @@
                             android:layout_alignParentTop="true"
                             android:layout_marginTop="5dp"
                             android:src="@drawable/ic_humidity" />
+
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="4dp"
                             android:text="Kelembapan"
                             android:textColor="@color/gray_dark"
-                            android:fontFamily="@font/poppins"/>
+                            android:fontFamily="@font/poppins" />
+
                         <TextView
                             android:id="@+id/tvKelembapan"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="25dp"
-                            android:text="60%"
+                            android:text="--"
                             android:textColor="@color/gray_dark"
                             android:textSize="22sp"
-                            android:textStyle="bold"  android:fontFamily="@font/poppins"/>
+                            android:textStyle="bold"
+                            android:fontFamily="@font/poppins" />
+
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="55dp"
-                            android:text="Ideal range"
-                            android:textSize="30px"
+                            android:text="Soil sensor"
+                            android:textSize="10sp"
                             android:textColor="@color/gray_dark"
-                            android:fontFamily="@font/poppins"/>
+                            android:fontFamily="@font/poppins" />
+
                     </RelativeLayout>
                 </androidx.cardview.widget.CardView>
 
+                <!-- Card Status Alat -->
                 <androidx.cardview.widget.CardView
                     android:layout_width="0dp"
                     android:layout_height="100dp"
@@ -169,10 +184,12 @@
                     app:cardBackgroundColor="@color/green_bg"
                     app:cardCornerRadius="16dp"
                     app:cardElevation="0dp">
+
                     <RelativeLayout
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:padding="16dp">
+
                         <ImageView
                             android:layout_width="32dp"
                             android:layout_height="32dp"
@@ -180,25 +197,31 @@
                             android:layout_alignParentEnd="true"
                             android:layout_alignParentTop="true"
                             android:src="@drawable/ic_pump" />
+
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Status Alat"
-                            android:textColor="@color/gray_dark"  android:fontFamily="@font/poppins"/>
+                            android:textColor="@color/gray_dark"
+                            android:fontFamily="@font/poppins" />
+
                         <TextView
                             android:id="@+id/tvStatusAlat"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="25dp"
-                            android:text="On"
+                            android:text="OFFLINE"
                             android:textColor="@color/gray_dark"
                             android:textSize="22sp"
-                            android:textStyle="bold"  android:fontFamily="@font/poppins"/>
+                            android:textStyle="bold"
+                            android:fontFamily="@font/poppins" />
+
                     </RelativeLayout>
                 </androidx.cardview.widget.CardView>
+
             </LinearLayout>
 
-            <!-- Baris 2: Lampu & Pompa Air (Persegi Panjang) -->
+            <!-- BARIS 2: LAMPU & POMPA AIR MANUAL -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -206,6 +229,7 @@
                 android:layout_marginTop="8dp"
                 android:orientation="horizontal">
 
+                <!-- Card Lampu -->
                 <androidx.cardview.widget.CardView
                     android:layout_width="0dp"
                     android:layout_height="100dp"
@@ -214,27 +238,40 @@
                     app:cardBackgroundColor="@color/green_bg"
                     app:cardCornerRadius="16dp"
                     app:cardElevation="0dp">
+
                     <RelativeLayout
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:padding="16dp">
+
                         <TextView
                             android:id="@+id/labelLampu"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Lampu"
                             android:textColor="@color/gray_dark"
-                            android:fontFamily="@font/poppins"/>
+                            android:fontFamily="@font/poppins" />
+
                         <TextView
                             android:id="@+id/tvLampuStatus"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_below="@id/labelLampu"
-                            android:text="Off"
+                            android:text="OFF"
                             android:textColor="@color/gray_dark"
                             android:textSize="24sp"
                             android:textStyle="bold"
-                            android:fontFamily="@font/poppins"/>
+                            android:fontFamily="@font/poppins" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_below="@id/tvLampuStatus"
+                            android:text="Manual"
+                            android:textColor="@color/gray_dark"
+                            android:textSize="10sp"
+                            android:fontFamily="@font/poppins" />
+
                         <ImageView
                             android:layout_width="32dp"
                             android:layout_height="32dp"
@@ -247,13 +284,15 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_alignParentEnd="true"
-                            android:layout_marginBottom="-10dp"
                             android:layout_alignParentBottom="true"
-                            android:checked="false"/>
+                            android:layout_marginBottom="-10dp"
+                            android:checked="false" />
+
                     </RelativeLayout>
 
                 </androidx.cardview.widget.CardView>
 
+                <!-- Card Pompa Air -->
                 <androidx.cardview.widget.CardView
                     android:layout_width="0dp"
                     android:layout_height="100dp"
@@ -261,33 +300,47 @@
                     app:cardBackgroundColor="@color/green_bg"
                     app:cardCornerRadius="16dp"
                     app:cardElevation="0dp">
+
                     <RelativeLayout
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:padding="16dp">
+
                         <TextView
                             android:id="@+id/labelPompa"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Pompa Air"
                             android:textColor="@color/gray_dark"
-                            android:fontFamily="@font/poppins"/>
+                            android:fontFamily="@font/poppins" />
+
                         <TextView
                             android:id="@+id/tvPompaStatus"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_below="@id/labelPompa"
-                            android:text="On"
+                            android:text="OFF"
                             android:textColor="@color/gray_dark"
                             android:textSize="24sp"
                             android:textStyle="bold"
-                            android:fontFamily="@font/poppins"/>
+                            android:fontFamily="@font/poppins" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_below="@id/tvPompaStatus"
+                            android:text="Manual"
+                            android:textColor="@color/gray_dark"
+                            android:textSize="10sp"
+                            android:fontFamily="@font/poppins" />
+
                         <ImageView
                             android:layout_width="32dp"
                             android:layout_height="32dp"
                             android:layout_alignParentEnd="true"
                             android:layout_alignParentTop="true"
                             android:src="@drawable/ic_pump" />
+
                         <com.google.android.material.switchmaterial.SwitchMaterial
                             android:id="@+id/switchPompa"
                             android:layout_width="wrap_content"
@@ -295,11 +348,136 @@
                             android:layout_alignParentEnd="true"
                             android:layout_alignParentBottom="true"
                             android:layout_marginBottom="-10dp"
-                            android:checked="true"/>
+                            android:checked="false" />
+
                     </RelativeLayout>
+
                 </androidx.cardview.widget.CardView>
+
             </LinearLayout>
 
+            <!-- BARIS 3: MODE OTOMATIS LAMPU & POMPA -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="20dp"
+                android:layout_marginTop="8dp"
+                android:orientation="horizontal">
+
+                <!-- Card Mode Lampu -->
+                <androidx.cardview.widget.CardView
+                    android:layout_width="0dp"
+                    android:layout_height="100dp"
+                    android:layout_marginEnd="8dp"
+                    android:layout_weight="1"
+                    app:cardBackgroundColor="@color/green_bg"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="0dp">
+
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:padding="16dp">
+
+                        <TextView
+                            android:id="@+id/labelModeLampu"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Mode Lampu"
+                            android:textColor="@color/gray_dark"
+                            android:fontFamily="@font/poppins" />
+
+                        <TextView
+                            android:id="@+id/tvLampuMode"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_below="@id/labelModeLampu"
+                            android:text="MANUAL"
+                            android:textColor="@color/gray_dark"
+                            android:textSize="20sp"
+                            android:textStyle="bold"
+                            android:fontFamily="@font/poppins" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_below="@id/tvLampuMode"
+                            android:text="Auto LDR"
+                            android:textColor="@color/gray_dark"
+                            android:textSize="10sp"
+                            android:fontFamily="@font/poppins" />
+
+                        <com.google.android.material.switchmaterial.SwitchMaterial
+                            android:id="@+id/switchLampuAuto"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentEnd="true"
+                            android:layout_alignParentBottom="true"
+                            android:layout_marginBottom="-10dp"
+                            android:checked="false" />
+
+                    </RelativeLayout>
+
+                </androidx.cardview.widget.CardView>
+
+                <!-- Card Mode Pompa -->
+                <androidx.cardview.widget.CardView
+                    android:layout_width="0dp"
+                    android:layout_height="100dp"
+                    android:layout_weight="1"
+                    app:cardBackgroundColor="@color/green_bg"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="0dp">
+
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:padding="16dp">
+
+                        <TextView
+                            android:id="@+id/labelModePompa"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Mode Pompa"
+                            android:textColor="@color/gray_dark"
+                            android:fontFamily="@font/poppins" />
+
+                        <TextView
+                            android:id="@+id/tvPompaMode"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_below="@id/labelModePompa"
+                            android:text="MANUAL"
+                            android:textColor="@color/gray_dark"
+                            android:textSize="20sp"
+                            android:textStyle="bold"
+                            android:fontFamily="@font/poppins" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_below="@id/tvPompaMode"
+                            android:text="Auto soil"
+                            android:textColor="@color/gray_dark"
+                            android:textSize="10sp"
+                            android:fontFamily="@font/poppins" />
+
+                        <com.google.android.material.switchmaterial.SwitchMaterial
+                            android:id="@+id/switchPompaAuto"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentEnd="true"
+                            android:layout_alignParentBottom="true"
+                            android:layout_marginBottom="-10dp"
+                            android:checked="false" />
+
+                    </RelativeLayout>
+
+                </androidx.cardview.widget.CardView>
+
+            </LinearLayout>
+
+            <!-- JUDUL GRAFIK -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -307,9 +485,10 @@
                 android:layout_marginTop="24dp"
                 android:text="Grafik Kelembapan"
                 android:textColor="@color/gray_dark"
-                android:textStyle="bold"  android:fontFamily="@font/poppins"/>
+                android:textStyle="bold"
+                android:fontFamily="@font/poppins" />
 
-            <!-- Grafik (Hanya Kelembapan) -->
+            <!-- CARD GRAFIK -->
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -317,6 +496,7 @@
                 app:cardBackgroundColor="@color/white"
                 app:cardCornerRadius="16dp"
                 app:cardElevation="2dp">
+
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -327,18 +507,23 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="12dp"
-                        android:text="Data harian minggu ini"
+                        android:text="Data kelembapan dari sensor"
                         android:textColor="@color/gray_dark"
-                        android:textSize="12sp"  android:fontFamily="@font/poppins"/>
+                        android:textSize="12sp"
+                        android:fontFamily="@font/poppins" />
 
                     <com.github.mikephil.charting.charts.LineChart
                         android:id="@+id/lineChart"
                         android:layout_width="match_parent"
                         android:layout_height="200dp"
                         android:layout_marginTop="16dp" />
+
                 </LinearLayout>
+
             </androidx.cardview.widget.CardView>
+
         </LinearLayout>
+
     </ScrollView>
 
     <!-- HEADER SECTION -->
@@ -362,17 +547,20 @@
             android:text="Selamat datang di Planti"
             android:textColor="@color/white"
             android:textSize="18sp"
-            android:layout_marginBottom="2dp"  android:fontFamily="@font/poppins"/>
+            android:layout_marginBottom="2dp"
+            android:fontFamily="@font/poppins" />
 
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="50dp"
             android:gravity="center_vertical"
             android:orientation="horizontal">
+
             <ImageView
                 android:layout_width="32dp"
                 android:layout_height="32dp"
                 android:src="@drawable/ic_farmer" />
+
             <TextView
                 android:id="@+id/tvUserName"
                 android:layout_width="wrap_content"
@@ -380,8 +568,11 @@
                 android:layout_marginStart="8dp"
                 android:textColor="@color/white"
                 android:textSize="24sp"
-                android:textStyle="bold"  android:fontFamily="@font/poppins" />
+                android:textStyle="bold"
+                android:fontFamily="@font/poppins" />
+
         </LinearLayout>
+
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
