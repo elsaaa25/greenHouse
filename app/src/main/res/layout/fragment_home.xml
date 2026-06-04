@@ -160,7 +160,7 @@
                             android:layout_marginTop="25dp"
                             android:text="--"
                             android:textColor="@color/gray_dark"
-                            android:textSize="22sp"
+                            android:textSize="20sp"
                             android:textStyle="bold"
                             android:fontFamily="@font/poppins" />
 
@@ -168,8 +168,8 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="55dp"
-                            android:text="Soil sensor"
-                            android:textSize="10sp"
+                            android:text="Range ideal"
+                            android:textSize="8sp"
                             android:textColor="@color/gray_dark"
                             android:fontFamily="@font/poppins" />
 
@@ -212,7 +212,7 @@
                             android:layout_marginTop="25dp"
                             android:text="OFF"
                             android:textColor="@color/gray_dark"
-                            android:textSize="22sp"
+                            android:textSize="18sp"
                             android:textStyle="bold"
                             android:fontFamily="@font/poppins" />
 
@@ -259,7 +259,7 @@
                             android:layout_below="@id/labelLampu"
                             android:text="OFF"
                             android:textColor="@color/gray_dark"
-                            android:textSize="20sp"
+                            android:textSize="18sp"
                             android:textStyle="bold"
                             android:fontFamily="@font/poppins" />
 
@@ -321,7 +321,7 @@
                             android:layout_below="@id/labelPompa"
                             android:text="OFF"
                             android:textColor="@color/gray_dark"
-                            android:textSize="20sp"
+                            android:textSize="18sp"
                             android:textStyle="bold"
                             android:fontFamily="@font/poppins" />
 
@@ -394,7 +394,7 @@
                             android:layout_below="@id/labelModeLampu"
                             android:text="MANUAL"
                             android:textColor="@color/gray_dark"
-                            android:textSize="20sp"
+                            android:textSize="18sp"
                             android:textStyle="bold"
                             android:fontFamily="@font/poppins" />
 
@@ -449,7 +449,7 @@
                             android:layout_below="@id/labelModePompa"
                             android:text="MANUAL"
                             android:textColor="@color/gray_dark"
-                            android:textSize="20sp"
+                            android:textSize="18sp"
                             android:textStyle="bold"
                             android:fontFamily="@font/poppins" />
 
