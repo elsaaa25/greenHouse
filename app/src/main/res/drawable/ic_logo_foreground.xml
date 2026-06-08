@@ -2,22 +2,20 @@
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="21000"
-    android:viewportHeight="21000"> <!-- Diubah jadi kotak agar mudah di tengah -->
+    android:viewportHeight="21000">
 
-    <!-- Group ini berfungsi untuk memposisikan logo tepat di tengah -->
     <group
         android:pivotX="10500"
         android:pivotY="10500"
         android:scaleX="0.75"
         android:scaleY="0.75"
         android:translateX="-1000"
-        android:translateY="0"> <!-- Geser sedikit ke atas jika dirasa terlalu bawah -->
+        android:translateY="0">
 
         <group
             android:translateX="1500"
-            android:translateY="0"> <!-- Offset tambahan untuk menyeimbangkan isi path -->
+            android:translateY="0">
 
-            <!-- Path logo asli kamu -->
             <path
                 android:pathData="M6026,11102h9222v5599h-9222z"
                 android:fillColor="#0C8A46"
