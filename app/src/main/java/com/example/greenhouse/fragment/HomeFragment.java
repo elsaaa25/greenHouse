@@ -41,27 +41,17 @@ public class HomeFragment extends Fragment {
 
     private TextView tvUserName;
     private TextView tvLampuStatus, tvPompaStatus;
-
-    // TextView opsional.
-    // Kalau ID ini belum ada di XML, aplikasi tetap aman.
+    private TextView tvStatus;
     private TextView tvKelembapan, tvLdrValue, tvStatusAlat;
     private TextView tvLampuMode, tvPompaMode;
-
-    // Switch utama untuk manual ON/OFF
     private SwitchMaterial switchLampu, switchPompa;
-
-    // Switch opsional untuk mode AUTO
-    // Tambahkan di XML kalau ingin ada kontrol AUTO dari aplikasi.
     private SwitchMaterial switchLampuAuto, switchPompaAuto;
-
     private LineChart lineChart;
-
     private FirebaseAuth auth;
     private FirebaseFirestore db;
 
-    // =========================
+
     // KONFIGURASI MQTT
-    // =========================
     private MqttAsyncClient mqttClient;
 
     private final String broker = "tcp://broker.emqx.io:1883";
@@ -69,7 +59,7 @@ public class HomeFragment extends Fragment {
     // Data monitoring dari ESP32 ke Android
     private final String topicSoil = "esp32/soil";
     private final String topicLdr = "esp32/ldr";
-    private final String topicDeviceStatus = "esp32/device/status";
+    private final String topicDeviceStatus = "greenhouse/ben10/device/status";
 
     // Perintah dari Android ke ESP32
     private final String topicLampCmd = "esp32/lamp/cmd";
@@ -112,6 +102,14 @@ public class HomeFragment extends Fragment {
         tvUserName = view.findViewById(R.id.tvUserName);
         tvLampuStatus = view.findViewById(R.id.tvLampuStatus);
         tvPompaStatus = view.findViewById(R.id.tvPompaStatus);
+        tvStatus = view.findViewById(R.id.tvStatus);
+
+        if (tvStatus != null) {
+            tvStatus.setText("Mencari Alat...");
+        }
+        if (tvStatusAlat != null) {
+            tvStatusAlat.setText("CHECKING...");
+        }
 
         switchLampu = view.findViewById(R.id.switchLampu);
         switchPompa = view.findViewById(R.id.switchPompa);
@@ -343,9 +341,11 @@ public class HomeFragment extends Fragment {
                                 tvStatusAlat.setText("OFFLINE");
                             }
 
-                            Toast.makeText(requireContext(),
-                                    "Koneksi MQTT terputus",
-                                    Toast.LENGTH_SHORT).show();
+                            if (tvStatus != null) {
+                                tvStatus.setText("Monitoring Terputus (No Internet)");
+                                tvStatus.setTextColor(Color.RED);
+                            }
+                            Toast.makeText(requireContext(), "Koneksi MQTT terputus", Toast.LENGTH_SHORT).show();
                         });
                     }
                 }
@@ -448,6 +448,15 @@ public class HomeFragment extends Fragment {
         else if (topic.equals(topicDeviceStatus)) {
             if (tvStatusAlat != null) {
                 tvStatusAlat.setText(payload);
+            }
+            if (tvStatus != null) {
+                // payload harus "ON" untuk aktif
+                if (payload.equalsIgnoreCase("ON") || payload.equalsIgnoreCase("ONLINE")) {
+                    tvStatus.setText("Monitoring Aktif");
+                } else {
+                    // Jika payload "OFF" atau "OFFLINE" (dikirim oleh LWT ESP32)
+                    tvStatus.setText("Monitoring Nonaktif");
+                }
             }
         }
 
