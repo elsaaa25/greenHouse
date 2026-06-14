@@ -59,6 +59,20 @@ public class LoginActivity extends AppCompatActivity {
         });
     }
 
+    @Override
+    protected void onStart() {
+        super.onStart();
+        // Inilah kuncinya: Firebase secara otomatis menyimpan sesi user di HP.
+        // Kita cek, jika user tidak null, artinya dia sudah login sebelumnya.
+        if (auth.getCurrentUser() != null) {
+            // Langsung pindahkan ke MainActivity tanpa perlu login lagi
+            Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+            finish();
+        }
+    }
+
     private void loginUser() {
         String email = etEmail.getText().toString().trim();
         String password = etPassword.getText().toString().trim();
