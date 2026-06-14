@@ -10,7 +10,7 @@
         android:scaleX="0.8"
         android:scaleY="0.8"
         android:translateX="0"
-        android:translateY="-1000">
+        android:translateY="-300">
 
     <path
         android:pathData="M6026,11102h9222v5599h-9222z"
