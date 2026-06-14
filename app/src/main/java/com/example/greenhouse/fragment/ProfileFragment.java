@@ -225,18 +225,21 @@ public class ProfileFragment extends Fragment {
      * lalu kembali ke halaman LoginActivity.
      */
     private void logoutUser() {
-        auth.signOut();
+        // 1. Keluar dari Firebase (Menghapus sesi login)
+        FirebaseAuth.getInstance().signOut();
 
-        Toast.makeText(
-                requireContext(),
-                "Berhasil keluar",
-                Toast.LENGTH_SHORT
-        ).show();
+        // 2. Tampilkan pesan
+        Toast.makeText(getActivity(), "Berhasil Keluar", Toast.LENGTH_SHORT).show();
 
-        Intent intent = new Intent(requireActivity(), LoginActivity.class);
+        // 3. Pindah kembali ke LoginActivity
+        Intent intent = new Intent(getActivity(), LoginActivity.class);
+
+        // Flag ini penting agar user tidak bisa tekan tombol 'Back' untuk kembali ke halaman utama
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        startActivity(intent);
 
-        requireActivity().finish();
+        startActivity(intent);
+        if (getActivity() != null) {
+            getActivity().finish();
+        }
     }
 }
