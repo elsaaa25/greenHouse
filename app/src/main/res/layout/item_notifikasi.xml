@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/containerNotif"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="16dp"
+    android:background="@drawable/bg_notif_default"
+    android:orientation="horizontal"
+    android:padding="16dp">
+
+    <ImageView
+        android:id="@+id/ivIconNotif"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:background="@drawable/bg_verified_rounded"
+        android:padding="8dp"
+        android:src="@drawable/ic_verified" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tvJudulNotif"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Judul"
+            android:textColor="@color/gray_dark"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvPesanNotif"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Pesan sensor..."
+            android:textColor="@color/gray_text"
+            android:textSize="11sp" />
+
+        <TextView
+            android:id="@+id/tvWaktuNotif"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="Waktu"
+            android:textColor="#999999"
+            android:textSize="10sp" />
+    </LinearLayout>
+</LinearLayout>
