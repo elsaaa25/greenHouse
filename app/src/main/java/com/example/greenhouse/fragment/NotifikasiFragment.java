@@ -9,14 +9,13 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.greenhouse.R;
-
-import org.eclipse.paho.client.mqttv3.*;
-import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
+import com.example.greenhouse.activity.MainActivity;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -29,11 +28,16 @@ public class NotifikasiFragment extends Fragment {
     private RecyclerView rvNotifikasi;
     private NotifikasiAdapter adapter;
     private List<NotifikasiModel> listNotif = new ArrayList<>();
-    private MqttAsyncClient mqttClient;
 
-    // Topic yang dipantau
+    // Topic yang dipantau (Samakan dengan yang ada di MainActivity)
     private final String topicSoil = "esp32/soil";
     private final String topicStatus = "greenhouse/ben10/device/status";
+
+    // Listener untuk menerima data dari MainActivity
+    private MainActivity.OnMqttMessageListener mqttListener;
+
+    // FLAG: Mencegah duplikasi notifikasi "Alat Terhubung" (Infinity loop prevention)
+    private boolean isDeviceConnectedNotified = false;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -45,74 +49,66 @@ public class NotifikasiFragment extends Fragment {
         adapter = new NotifikasiAdapter(listNotif);
         rvNotifikasi.setAdapter(adapter);
 
-        connectMQTT();
         return view;
     }
 
-    private void connectMQTT() {
-        String serverUri = "tcp://broker.emqx.io:1883";
-        String clientId = "Green_Notif_" + System.currentTimeMillis();
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
 
-        try {
-            mqttClient = new MqttAsyncClient(serverUri, clientId, new MemoryPersistence());
-            mqttClient.setCallback(new MqttCallback() {
-                @Override public void connectionLost(Throwable cause) {}
+        // 1. Inisialisasi Listener untuk menerima data dari MainActivity
+        mqttListener = (topic, payload) -> {
+            if (isAdded()) {
+                String time = new SimpleDateFormat("HH:mm", Locale.getDefault()).format(new Date());
 
-                @Override
-                public void messageArrived(String topic, MqttMessage message) {
-                    String payload = new String(message.getPayload());
-
-                    if (isAdded()) {
-                        String time = new SimpleDateFormat("HH:mm", Locale.getDefault()).format(new Date());
-
-                        if (topic.equals(topicSoil)) {
-                            int val = Integer.parseInt(payload);
-                            if (val < 40) {
-                                addNewNotif("Tanaman membutuhkan air!",
-                                        "Kelembapan tanah turun ke " + val + "% di bawah batas optimal.",
-                                        "Hari ini : " + time + " WIB", R.drawable.ic_air);
-                            }
-                        } else if (topic.equals(topicStatus) && payload.equalsIgnoreCase("ONLINE")) {
-                            addNewNotif("Alat Terhubung",
-                                    "Monitoring tanaman anda dimulai sekarang.",
-                                    "Hari ini : " + time + " WIB", R.drawable.ic_verified);
+                // Logika: Jika topic tanah kering
+                if (topic.equals(topicSoil)) {
+                    try {
+                        int val = Integer.parseInt(payload);
+                        if (val < 40) {
+                            addNewNotif("Tanaman membutuhkan air!",
+                                    "Kelembapan tanah turun ke " + val + "% di bawah batas optimal.",
+                                    "Hari ini : " + time + " WIB", R.drawable.ic_air);
                         }
+                    } catch (Exception e) { e.printStackTrace(); }
+                }
+                // Logika: Jika alat terhubung
+                else if (topic.equals(topicStatus) && payload.equalsIgnoreCase("ONLINE")) {
+                    // Validasi flag: Mencegah duplikasi notifikasi
+                    if (!isDeviceConnectedNotified) {
+                        addNewNotif("Alat Terhubung",
+                                "Monitoring tanaman anda dimulai sekarang.",
+                                "Hari ini : " + time + " WIB", R.drawable.ic_verified);
+                        
+                        // Kunci flag agar tidak muncul berulang kali (mencegah infinity loop)
+                        isDeviceConnectedNotified = true;
                     }
                 }
+            }
+        };
 
-                @Override public void deliveryComplete(IMqttDeliveryToken token) {}
-            });
-
-            MqttConnectOptions options = new MqttConnectOptions();
-            options.setCleanSession(true);
-            mqttClient.connect(options, null, new IMqttActionListener() {
-                @Override
-                public void onSuccess(IMqttToken asyncActionToken) {
-                    try {
-                        mqttClient.subscribe(topicSoil, 1);
-                        mqttClient.subscribe(topicStatus, 1);
-                    } catch (MqttException e) { e.printStackTrace(); }
-                }
-                @Override public void onFailure(IMqttToken asyncActionToken, Throwable exception) {}
-            });
-        } catch (MqttException e) { e.printStackTrace(); }
-    }
-
-    private void addNewNotif(String judul, String pesan, String waktu, int iconRes) {
-        requireActivity().runOnUiThread(() -> {
-            // Tambah di index 0 (paling atas)
-            listNotif.add(0, new NotifikasiModel(judul, pesan, waktu, iconRes));
-
-            // notifyDataSetChanged agar posisi 0 berubah jadi oranye dan posisi 1++ jadi abu-abu
-            adapter.notifyDataSetChanged();
-            rvNotifikasi.scrollToPosition(0);
-        });
+        // 2. Daftarkan diri ke MainActivity
+        if (getActivity() instanceof MainActivity) {
+            ((MainActivity) getActivity()).addMqttListener(mqttListener);
+        }
     }
 
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        try { if (mqttClient != null) mqttClient.disconnect(); } catch (Exception e) {}
+        // 3. Lepas listener agar tidak terjadi kebocoran memori saat pindah tab
+        if (getActivity() instanceof MainActivity) {
+            ((MainActivity) getActivity()).removeMqttListener(mqttListener);
+        }
+    }
+
+    private void addNewNotif(String judul, String pesan, String waktu, int iconRes) {
+        // Tambah di index 0 (paling atas)
+        listNotif.add(0, new NotifikasiModel(judul, pesan, waktu, iconRes));
+
+        // notifyDataSetChanged agar posisi 0 berwarna oranye (logic di adapter)
+        adapter.notifyDataSetChanged();
+        rvNotifikasi.scrollToPosition(0);
     }
 
     // --- INNER CLASS MODEL ---
