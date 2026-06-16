@@ -500,7 +500,6 @@
                 android:textStyle="bold"
                 android:fontFamily="@font/poppins" />
 
-            <!-- CARD GRAFIK -->
             <!-- Card Grafik Kelembapan -->
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
@@ -528,8 +527,8 @@
                     <com.github.mikephil.charting.charts.LineChart
                         android:id="@+id/lineChart"
                         android:layout_width="match_parent"
-                        android:layout_height="320dp"
-                        android:layout_marginTop="16dp" />
+                        android:layout_height="250dp"
+                        android:layout_marginTop="8dp" />
 
                     <!-- Legenda -->
                     <LinearLayout
@@ -636,9 +635,8 @@
                         android:id="@+id/seekBarMin"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:max="40"
+                        android:max="100"
                         android:progress="30"
-                        android:layout_marginBottom="14dp"
                         android:progressTint="#378ADD"
                         android:thumbTint="#378ADD"/>
 
@@ -672,11 +670,10 @@
                         android:id="@+id/seekBarMax"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:max="30"
-                        android:progress="10"
+                        android:max="100"
+                        android:progress="80"
                         android:progressTint="#E24B4A"
                         android:thumbTint="#E24B4A"/>
-
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 

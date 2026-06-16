@@ -24,6 +24,7 @@ import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
+import com.github.mikephil.charting.formatter.ValueFormatter;
 import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -140,57 +141,94 @@ public class HomeFragment extends Fragment {
 
         SharedPreferences prefs = requireContext().getSharedPreferences("user_prefs", Context.MODE_PRIVATE);
         if (tvUserName != null) tvUserName.setText(prefs.getString("nickName", "User"));
+
+        if (seekBarMin != null && seekBarMax != null) {
+            batasMin = seekBarMin.getProgress();
+            batasMaks = seekBarMax.getProgress();
+            tvMinValue.setText((int)batasMin + "%");
+            tvMaxValue.setText((int)batasMaks + "%");
+        }
     }
 
     private void setupLineChart() {
         if (lineChart == null) return;
+
         lineChart.getDescription().setEnabled(false);
         lineChart.getLegend().setEnabled(false);
-        lineChart.getAxisRight().setEnabled(false);
-        lineChart.setExtraOffsets(0f, 10f, 0f, 10f);
-        lineChart.setTouchEnabled(true);
-        lineChart.setDragEnabled(true);
-        lineChart.setScaleXEnabled(true);
-        lineChart.setScaleYEnabled(false);
+        lineChart.setExtraOffsets(10f, 40f, 10f, 20f); // Ruang untuk label Maks/Min dan Sumbu X
 
+        // Sumbu Y (Kiri)
         YAxis yAxis = lineChart.getAxisLeft();
-        yAxis.setAxisMinimum(0f);
+        yAxis.setAxisMinimum(40f); // Mulai dari 40% agar grafik terlihat "naik"
         yAxis.setAxisMaximum(100f);
-        yAxis.setLabelCount(6, true);
-        yAxis.setGridColor(Color.LTGRAY);
+        yAxis.setLabelCount(6, false); // Agar tidak dempet
+        yAxis.setGranularity(5f);
+        yAxis.setDrawAxisLine(false); // Hilangkan garis pinggir hitam
+        yAxis.setGridColor(Color.parseColor("#E0E0E0")); // Grid halus
+        yAxis.setValueFormatter(new ValueFormatter() {
+            @Override
+            public String getFormattedValue(float value) {
+                return (int) value + "%";
+            }
+        });
 
+        // Sumbu X (Bawah)
         XAxis xAxis = lineChart.getXAxis();
         xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
         xAxis.setDrawGridLines(false);
+        xAxis.setDrawAxisLine(false);
+        xAxis.setAxisMinimum(0f); // Cegah angka -1
+        xAxis.setValueFormatter(new ValueFormatter() {
+            @Override
+            public String getFormattedValue(float value) {
+                if (lineChart.getData() == null) return "";
+                float max = lineChart.getData().getXMax();
+                int diff = (int) (value - max);
+                if (diff == 0) return "Skrng";
+                if (diff < 0 && diff % 30 == 0) return diff + "s"; // Muncul per 30 detik
+                return "";
+            }
+        });
+
+        lineChart.getAxisRight().setEnabled(false);
         updateLimitLines();
     }
 
+
     private void updateLimitLines() {
-        if (lineChart == null) return;
         YAxis yAxis = lineChart.getAxisLeft();
-        yAxis.removeAllLimitLines();
+        yAxis.removeAllLimitLines(); // Hapus garis lama agar tidak menumpuk
 
-        LimitLine llMaks = new LimitLine(batasMaks, "Maks " + (int) batasMaks + "%");
+        // Garis Maks
+        LimitLine llMaks = new LimitLine(batasMaks, "Maks " + (int)batasMaks + "%");
         llMaks.setLineColor(Color.parseColor("#E24B4A"));
-        llMaks.setLineWidth(1.5f);
+        llMaks.setLineWidth(1.2f);
         llMaks.setTextColor(Color.parseColor("#E24B4A"));
+        llMaks.setLabelPosition(LimitLine.LimitLabelPosition.RIGHT_TOP);
+        llMaks.setTextSize(9f);
 
-        LimitLine llMin = new LimitLine(batasMin, "Min " + (int) batasMin + "%");
+        // Garis Min
+        LimitLine llMin = new LimitLine(batasMin, "Min " + (int)batasMin + "%");
         llMin.setLineColor(Color.parseColor("#378ADD"));
-        llMin.setLineWidth(1.5f);
+        llMin.setLineWidth(1.2f);
         llMin.setTextColor(Color.parseColor("#378ADD"));
+        llMin.setLabelPosition(LimitLine.LimitLabelPosition.RIGHT_BOTTOM);
+        llMin.setTextSize(9f);
 
         yAxis.addLimitLine(llMaks);
         yAxis.addLimitLine(llMin);
-        lineChart.invalidate();
+
+        lineChart.invalidate(); // REFRESH GRAFIK
     }
 
     private void setupSeekBars() {
         if (seekBarMin == null || seekBarMax == null) return;
+
         seekBarMin.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                batasMin = progress + MIN_OFFSET;
+                // Jika progress 0-100, kita ambil langsung nilainya
+                batasMin = progress;
                 if (tvMinValue != null) tvMinValue.setText((int) batasMin + "%");
                 updateLimitLines();
             }
@@ -201,7 +239,7 @@ public class HomeFragment extends Fragment {
         seekBarMax.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                batasMaks = progress + MAX_OFFSET;
+                batasMaks = progress;
                 if (tvMaxValue != null) tvMaxValue.setText((int) batasMaks + "%");
                 updateLimitLines();
             }
@@ -272,24 +310,55 @@ public class HomeFragment extends Fragment {
     private void addSoilToChart(String payload) {
         try {
             float soilValue = Float.parseFloat(payload);
-            soilEntries.add(new Entry(soilIndex++, soilValue));
-            if (soilEntries.size() > 50) soilEntries.remove(0);
 
-            LineDataSet dataSet = new LineDataSet(new ArrayList<>(soilEntries), "Soil");
-            dataSet.setMode(LineDataSet.Mode.CUBIC_BEZIER);
-            dataSet.setColor(Color.parseColor("#2196F3"));
-            dataSet.setLineWidth(3f);
-            dataSet.setDrawCircles(false);
-            dataSet.setDrawValues(false);
-            dataSet.setDrawFilled(true);
-            dataSet.setFillColor(Color.parseColor("#2196F3"));
-            dataSet.setFillAlpha(40);
+            // 1. Ambil data yang sudah ada di chart (agar lebih ringan daripada membuat baru setiap detik)
+            LineData data = lineChart.getData();
 
-            lineChart.setData(new LineData(dataSet));
-            lineChart.setVisibleXRangeMaximum(40f);
+            if (data == null) {
+                // Jika data belum ada, buat dataset pertama kali
+                LineDataSet dataSet = new LineDataSet(new ArrayList<>(), "Kelembapan");
+
+                // --- STYLING PROFESIONAL ---
+                dataSet.setMode(LineDataSet.Mode.CUBIC_BEZIER); // Membuat garis melengkung halus (tidak kaku)
+                dataSet.setColor(Color.parseColor("#1D9E75"));  // Warna Teal yang lebih elegan
+                dataSet.setLineWidth(2.5f);                     // Garis sedikit lebih tebal
+                dataSet.setDrawCircles(false);                  // Hilangkan titik bulat data
+                dataSet.setDrawValues(false);                   // Hilangkan angka di atas garis
+
+                // Area di bawah garis (Gradient fill)
+                dataSet.setDrawFilled(true);
+                dataSet.setFillColor(Color.parseColor("#1D9E75"));
+                dataSet.setFillAlpha(35);                       // Transparansi area bawah
+
+                data = new LineData(dataSet);
+                lineChart.setData(data);
+            }
+
+            // 2. Tambahkan entry baru ke dataset yang sudah ada
+            data.addEntry(new Entry(soilIndex++, soilValue), 0);
+
+            // 3. Batasi memori (hapus data lama jika sudah lebih dari 600 data/10 menit)
+            if (data.getEntryCount() > 600) {
+                data.getDataSetByIndex(0).removeEntry(0);
+            }
+
+            // 4. Beritahu chart bahwa data berubah
+            data.notifyDataChanged();
             lineChart.notifyDataSetChanged();
-            lineChart.moveViewToX(lineChart.getData().getEntryCount());
-        } catch (Exception e) { e.printStackTrace(); }
+
+            // --- KUNCI TAMPILAN 3 MENIT ---
+            // Menampilkan 180 unit (detik) terakhir agar grafik tidak terlihat kerdil/sempit
+            lineChart.setVisibleXRangeMaximum(180f);
+
+            // Selalu geser ke arah data terbaru (paling kanan)
+            lineChart.moveViewToX(data.getXMax());
+
+            // Refresh tampilan
+            lineChart.invalidate();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private void setSwitchFromMqtt(SwitchMaterial sw, boolean checked) {
