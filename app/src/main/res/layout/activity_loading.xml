@@ -49,159 +49,17 @@
         android:textSize="14sp"
         app:layout_constraintTop_toBottomOf="@id/tvSubtitle" />
 
-    <GridLayout
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvPlants"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginTop="24dp"
         android:layout_marginBottom="24dp"
-        android:columnCount="2"
-        android:rowCount="2"
+        app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
+        app:spanCount="2"
         app:layout_constraintBottom_toTopOf="@id/btnStart"
-        app:layout_constraintTop_toBottomOf="@id/etSearch">
-
-        <!-- Pakcoy -->
-        <androidx.cardview.widget.CardView
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_rowWeight="1"
-            android:layout_columnWeight="1"
-            android:layout_margin="8dp"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="0dp"
-            app:cardBackgroundColor="@android:color/transparent">
-            <LinearLayout
-                android:id="@+id/btnPakcoy"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:gravity="center"
-                android:orientation="vertical"
-                android:padding="16dp"
-                android:clickable="true"
-                android:focusable="true"
-                android:background="@drawable/bg_plant_card">
-                <ImageView
-                    android:layout_width="60dp"
-                    android:layout_height="60dp"
-                    android:src="@drawable/ic_vegetable_pakcoy" />
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="Pakcoy"
-                    android:textStyle="bold"
-                    android:textColor="@color/gray_dark" />
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Brassica rapa"
-                    android:textSize="10sp"
-                    android:textStyle="italic" />
-            </LinearLayout>
-        </androidx.cardview.widget.CardView>
-
-        <!-- Tomat -->
-        <androidx.cardview.widget.CardView
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_rowWeight="1"
-            android:layout_columnWeight="1"
-            android:layout_margin="8dp"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="0dp"
-            app:cardBackgroundColor="@android:color/transparent">
-            <LinearLayout
-                android:id="@+id/btnTomat"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:gravity="center"
-                android:orientation="vertical"
-                android:padding="16dp"
-                android:clickable="true"
-                android:focusable="true"
-                android:background="@drawable/bg_plant_card">
-                <ImageView
-                    android:layout_width="60dp"
-                    android:layout_height="60dp"
-                    android:src="@drawable/ic_vegetable_tomat" />
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="Tomat"
-                    android:textStyle="bold"
-                    android:textColor="@color/gray_dark" />
-            </LinearLayout>
-        </androidx.cardview.widget.CardView>
-
-        <!-- Cabai -->
-        <androidx.cardview.widget.CardView
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_rowWeight="1"
-            android:layout_columnWeight="1"
-            android:layout_margin="8dp"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="0dp"
-            app:cardBackgroundColor="@android:color/transparent">
-            <LinearLayout
-                android:id="@+id/btnCabai"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:gravity="center"
-                android:orientation="vertical"
-                android:padding="16dp"
-                android:clickable="true"
-                android:focusable="true"
-                android:background="@drawable/bg_plant_card">
-                <ImageView
-                    android:layout_width="60dp"
-                    android:layout_height="60dp"
-                    android:src="@drawable/ic_vegetable_cabai" />
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="Cabai"
-                    android:textStyle="bold"
-                    android:textColor="@color/gray_dark" />
-            </LinearLayout>
-        </androidx.cardview.widget.CardView>
-
-        <!-- Wortel -->
-        <androidx.cardview.widget.CardView
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_rowWeight="1"
-            android:layout_columnWeight="1"
-            android:layout_margin="8dp"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="0dp"
-            app:cardBackgroundColor="@android:color/transparent">
-            <LinearLayout
-                android:id="@+id/btnWortel"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:gravity="center"
-                android:orientation="vertical"
-                android:padding="16dp"
-                android:clickable="true"
-                android:focusable="true"
-                android:background="@drawable/bg_plant_card">
-                <ImageView
-                    android:layout_width="60dp"
-                    android:layout_height="60dp"
-                    android:src="@drawable/ic_vegetable_carrot" />
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="Wortel"
-                    android:textStyle="bold"
-                    android:textColor="@color/gray_dark" />
-            </LinearLayout>
-        </androidx.cardview.widget.CardView>
-
-    </GridLayout>
+        app:layout_constraintTop_toBottomOf="@id/etSearch"
+        tools:listitem="@layout/item_plant" />
 
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/btnStart"

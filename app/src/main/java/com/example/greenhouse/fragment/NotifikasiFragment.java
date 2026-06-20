@@ -1,6 +1,7 @@
 package com.example.greenhouse.fragment;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,38 +16,41 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.greenhouse.R;
-import com.example.greenhouse.activity.MainActivity;
+import com.example.greenhouse.model.Notification;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.ListenerRegistration;
+import com.google.firebase.firestore.Query;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
 public class NotifikasiFragment extends Fragment {
 
+    private static final String TAG = "NotifikasiFragment";
+    
     private RecyclerView rvNotifikasi;
-    private NotifikasiAdapter adapter;
-    private List<NotifikasiModel> listNotif = new ArrayList<>();
-
-    // Topic yang dipantau (Samakan dengan yang ada di MainActivity)
-    private final String topicSoil = "esp32/soil";
-    private final String topicStatus = "greenhouse/ben10/device/status";
-
-    // Listener untuk menerima data dari MainActivity
-    private MainActivity.OnMqttMessageListener mqttListener;
-
-    // FLAG: Mencegah duplikasi notifikasi "Alat Terhubung" (Infinity loop prevention)
-    private boolean isDeviceConnectedNotified = false;
+    private NotificationAdapter adapter;
+    private List<Notification> notificationList = new ArrayList<>();
+    
+    private FirebaseFirestore db;
+    private FirebaseAuth auth;
+    private ListenerRegistration notificationListener;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_notifikasi, container, false);
 
+        db = FirebaseFirestore.getInstance();
+        auth = FirebaseAuth.getInstance();
+
         rvNotifikasi = view.findViewById(R.id.rvNotifikasi);
         rvNotifikasi.setLayoutManager(new LinearLayoutManager(getContext()));
 
-        adapter = new NotifikasiAdapter(listNotif);
+        adapter = new NotificationAdapter(notificationList);
         rvNotifikasi.setAdapter(adapter);
 
         return view;
@@ -55,75 +59,50 @@ public class NotifikasiFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        observeNotifications();
+    }
 
-        // 1. Inisialisasi Listener untuk menerima data dari MainActivity
-        mqttListener = (topic, payload) -> {
-            if (isAdded()) {
-                String time = new SimpleDateFormat("HH:mm", Locale.getDefault()).format(new Date());
+    private void observeNotifications() {
+        if (auth.getCurrentUser() == null) return;
+        
+        String uid = auth.getCurrentUser().getUid();
+        DocumentReference userRef = db.collection("users").document(uid);
 
-                // Logika: Jika topic tanah kering
-                if (topic.equals(topicSoil)) {
-                    try {
-                        int val = Integer.parseInt(payload);
-                        if (val < 40) {
-                            addNewNotif("Tanaman membutuhkan air!",
-                                    "Kelembapan tanah turun ke " + val + "% di bawah batas optimal.",
-                                    "Hari ini : " + time + " WIB", R.drawable.ic_air);
-                        }
-                    } catch (Exception e) { e.printStackTrace(); }
-                }
-                // Logika: Jika alat terhubung
-                else if (topic.equals(topicStatus) && payload.equalsIgnoreCase("ONLINE")) {
-                    // Validasi flag: Mencegah duplikasi notifikasi
-                    if (!isDeviceConnectedNotified) {
-                        addNewNotif("Alat Terhubung",
-                                "Monitoring tanaman anda dimulai sekarang.",
-                                "Hari ini : " + time + " WIB", R.drawable.ic_verified);
-                        
-                        // Kunci flag agar tidak muncul berulang kali (mencegah infinity loop)
-                        isDeviceConnectedNotified = true;
+        // Fetch notifications for this user, ordered by newest first
+        notificationListener = db.collection("notifications")
+                .whereEqualTo("ownerId", userRef)
+                .orderBy("createdAt", Query.Direction.DESCENDING)
+                .addSnapshotListener((snapshots, e) -> {
+                    if (e != null) {
+                        Log.w(TAG, "Listen failed.", e);
+                        return;
                     }
-                }
-            }
-        };
 
-        // 2. Daftarkan diri ke MainActivity
-        if (getActivity() instanceof MainActivity) {
-            ((MainActivity) getActivity()).addMqttListener(mqttListener);
-        }
+                    if (snapshots != null) {
+                        notificationList.clear();
+                        for (com.google.firebase.firestore.QueryDocumentSnapshot doc : snapshots) {
+                            Notification notification = doc.toObject(Notification.class);
+                            notificationList.add(notification);
+                        }
+                        adapter.notifyDataSetChanged();
+                    }
+                });
     }
 
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        // 3. Lepas listener agar tidak terjadi kebocoran memori saat pindah tab
-        if (getActivity() instanceof MainActivity) {
-            ((MainActivity) getActivity()).removeMqttListener(mqttListener);
+        if (notificationListener != null) {
+            notificationListener.remove();
         }
     }
 
-    private void addNewNotif(String judul, String pesan, String waktu, int iconRes) {
-        // Tambah di index 0 (paling atas)
-        listNotif.add(0, new NotifikasiModel(judul, pesan, waktu, iconRes));
+    // --- ADAPTER ---
+    public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapter.ViewHolder> {
+        private List<Notification> list;
+        private SimpleDateFormat sdf = new SimpleDateFormat("dd MMM, HH:mm", Locale.getDefault());
 
-        // notifyDataSetChanged agar posisi 0 berwarna oranye (logic di adapter)
-        adapter.notifyDataSetChanged();
-        rvNotifikasi.scrollToPosition(0);
-    }
-
-    // --- INNER CLASS MODEL ---
-    public static class NotifikasiModel {
-        String judul, pesan, waktu;
-        int iconRes;
-        public NotifikasiModel(String judul, String pesan, String waktu, int iconRes) {
-            this.judul = judul; this.pesan = pesan; this.waktu = waktu; this.iconRes = iconRes;
-        }
-    }
-
-    // --- INNER CLASS ADAPTER (LOGIKA WARNA POSISI) ---
-    public class NotifikasiAdapter extends RecyclerView.Adapter<NotifikasiAdapter.ViewHolder> {
-        private List<NotifikasiModel> list;
-        public NotifikasiAdapter(List<NotifikasiModel> list) { this.list = list; }
+        public NotificationAdapter(List<Notification> list) { this.list = list; }
 
         @NonNull
         @Override
@@ -134,20 +113,52 @@ public class NotifikasiFragment extends Fragment {
 
         @Override
         public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-            NotifikasiModel item = list.get(position);
-            holder.tvJudul.setText(item.judul);
-            holder.tvPesan.setText(item.pesan);
-            holder.tvWaktu.setText(item.waktu);
-            holder.ivIcon.setImageResource(item.iconRes);
+            Notification item = list.get(position);
+            holder.tvJudul.setText(item.getTitle());
+            holder.tvPesan.setText(item.getMessage());
+            
+            if (item.getCreatedAt() != null) {
+                holder.tvWaktu.setText(sdf.format(item.getCreatedAt().toDate()));
+            }
 
-            // LOGIKA WARNA: Posisi 0 (Terbaru) = Oranye, Lainnya = Abu-abu
-            if (position == 0) {
+            // Logic to set icon based on notification type
+            int iconRes;
+            int iconBg;
+            
+            String type = item.getType() != null ? item.getType() : "";
+            switch (type) {
+                case "LOW_HUMIDITY":
+                case "HIGH_HUMIDITY":
+                    iconRes = R.drawable.ic_air;
+                    iconBg = R.drawable.bg_orange_rounded;
+                    break;
+                case "PUMP_AUTO_ON":
+                    iconRes = R.drawable.ic_pump;
+                    iconBg = R.drawable.bg_orange_rounded;
+                    break;
+                case "DEVICE ONLINE":
+                default:
+                    iconRes = R.drawable.ic_verified;
+                    iconBg = R.drawable.bg_verified_rounded;
+                    break;
+            }
+            
+            holder.ivIcon.setImageResource(iconRes);
+            holder.ivIcon.setBackgroundResource(iconBg);
+
+            // Highlight unread notifications
+            if (!item.isRead()) {
                 holder.container.setBackgroundResource(R.drawable.bg_notif_warning);
-                holder.ivIcon.setBackgroundResource(R.drawable.bg_orange_rounded);
             } else {
                 holder.container.setBackgroundResource(R.drawable.bg_notif_default);
-                holder.ivIcon.setBackgroundResource(R.drawable.bg_verified_rounded);
             }
+            
+            // Optional: Click to mark as read
+            holder.itemView.setOnClickListener(v -> {
+                if (!item.isRead()) {
+                    db.collection("notifications").document(item.getId()).update("isRead", true);
+                }
+            });
         }
 
         @Override public int getItemCount() { return list.size(); }

@@ -7,31 +7,35 @@ import android.text.TextWatcher;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.LinearLayout;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.greenhouse.R;
+import com.example.greenhouse.adapter.PlantAdapter;
+import com.example.greenhouse.model.Plant;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import android.util.Log;
-import com.google.firebase.auth.FirebaseAuthException;
 
 public class LoadingActivity extends AppCompatActivity {
 
     // Komponen dari activity_loading.xml
     private EditText etSearch;
-    private View btnPakcoy, btnTomat, btnCabai, btnWortel;
     private Button btnStart;
+    private RecyclerView rvPlants;
 
-    // Parent CardView dari masing-masing tanaman
-    // Digunakan agar fitur search bisa menyembunyikan card penuh
-    private View cardPakcoy, cardTomat, cardCabai, cardWortel;
+    // Adapter untuk RecyclerView
+    private PlantAdapter adapter;
+    private List<Plant> plantList = new ArrayList<>();
 
     // Firebase
     private FirebaseAuth auth;
@@ -40,9 +44,9 @@ public class LoadingActivity extends AppCompatActivity {
     // Data register dari RegistActivity
     private String nickName, fullName, email, password;
 
-    // Data tanaman yang dipilih user
-    private String selectedPlant = "";
-    private String selectedPlantLatin = "";
+    // Data tanaman yang dipilih user (Join Reference)
+    private String selectedPlantId = "";
+    private String selectedPlantName = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,20 +55,10 @@ public class LoadingActivity extends AppCompatActivity {
 
         // Menghubungkan Java dengan ID XML
         etSearch = findViewById(R.id.etSearch);
-
-        btnPakcoy = findViewById(R.id.btnPakcoy);
-        btnTomat = findViewById(R.id.btnTomat);
-        btnCabai = findViewById(R.id.btnCabai);
-        btnWortel = findViewById(R.id.btnWortel);
-
         btnStart = findViewById(R.id.btnStart);
-        btnStart.setText("Daftar Sekarang");
+        rvPlants = findViewById(R.id.rvPlants);
 
-        // Mengambil parent CardView dari LinearLayout tanaman
-        cardPakcoy = (View) btnPakcoy.getParent();
-        cardTomat = (View) btnTomat.getParent();
-        cardCabai = (View) btnCabai.getParent();
-        cardWortel = (View) btnWortel.getParent();
+        btnStart.setText("Daftar Sekarang");
 
         // Inisialisasi Firebase
         auth = FirebaseAuth.getInstance();
@@ -72,28 +66,13 @@ public class LoadingActivity extends AppCompatActivity {
 
         // Ambil data dari RegistActivity
         boolean dataValid = ambilDataDariRegister();
-
         if (!dataValid) {
             finish();
             return;
         }
 
-        // Pilih tanaman
-        btnPakcoy.setOnClickListener(v ->
-                pilihTanaman("Pakcoy", "Brassica rapa", btnPakcoy)
-        );
-
-        btnTomat.setOnClickListener(v ->
-                pilihTanaman("Tomat", "Solanum lycopersicum", btnTomat)
-        );
-
-        btnCabai.setOnClickListener(v ->
-                pilihTanaman("Cabai", "Capsicum annuum", btnCabai)
-        );
-
-        btnWortel.setOnClickListener(v ->
-                pilihTanaman("Wortel", "Daucus carota", btnWortel)
-        );
+        setupRecyclerView();
+        fetchPlantsFromFirestore();
 
         // Tombol daftar sekarang
         btnStart.setOnClickListener(v -> daftarSekarang());
@@ -101,20 +80,48 @@ public class LoadingActivity extends AppCompatActivity {
         // Fitur search tanaman
         etSearch.addTextChangedListener(new TextWatcher() {
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                // Tidak digunakan
-            }
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                filterTanaman(s.toString());
+                if (adapter != null) {
+                    adapter.filter(s.toString());
+                }
             }
 
             @Override
-            public void afterTextChanged(Editable s) {
-                // Tidak digunakan
-            }
+            public void afterTextChanged(Editable s) {}
         });
+    }
+
+    private void setupRecyclerView() {
+        adapter = new PlantAdapter();
+        rvPlants.setLayoutManager(new GridLayoutManager(this, 2));
+        rvPlants.setAdapter(adapter);
+
+        adapter.setOnPlantClickListener(plant -> {
+            selectedPlantId = plant.getId();
+            selectedPlantName = plant.getPlantName();
+            adapter.setSelectedId(selectedPlantId);
+            Toast.makeText(this, selectedPlantName + " dipilih", Toast.LENGTH_SHORT).show();
+        });
+    }
+
+    private void fetchPlantsFromFirestore() {
+        db.collection("plants")
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    plantList.clear();
+                    for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
+                        Plant plant = document.toObject(Plant.class);
+                        plantList.add(plant);
+                    }
+                    adapter.setPlants(plantList);
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("FIRESTORE", "Error fetching plants", e);
+                    Toast.makeText(this, "Gagal mengambil data tanaman", Toast.LENGTH_SHORT).show();
+                });
     }
 
     private boolean ambilDataDariRegister() {
@@ -123,7 +130,6 @@ public class LoadingActivity extends AppCompatActivity {
         email = getIntent().getStringExtra("email");
         password = getIntent().getStringExtra("password");
 
-        // Jika data kosong berarti LoadingActivity tidak dibuka dari RegistActivity
         if (nickName == null || fullName == null || email == null || password == null) {
             Toast.makeText(this, "Data register tidak lengkap", Toast.LENGTH_SHORT).show();
             return false;
@@ -132,47 +138,9 @@ public class LoadingActivity extends AppCompatActivity {
         return true;
     }
 
-    private void pilihTanaman(String namaTanaman, String namaLatin, View selectedButton) {
-        // Simpan tanaman yang dipilih
-        selectedPlant = namaTanaman;
-        selectedPlantLatin = namaLatin;
-
-        // Reset semua pilihan
-        resetPilihanTanaman();
-
-        // Beri efek pada tanaman terpilih
-        selectedButton.setAlpha(0.65f);
-
-        Toast.makeText(this, namaTanaman + " dipilih", Toast.LENGTH_SHORT).show();
-    }
-
-    private void resetPilihanTanaman() {
-        btnPakcoy.setAlpha(1f);
-        btnTomat.setAlpha(1f);
-        btnCabai.setAlpha(1f);
-        btnWortel.setAlpha(1f);
-    }
-
-    private void filterTanaman(String keyword) {
-        keyword = keyword.toLowerCase().trim();
-
-        setCardVisibility(cardPakcoy, "pakcoy brassica rapa", keyword);
-        setCardVisibility(cardTomat, "tomat solanum lycopersicum", keyword);
-        setCardVisibility(cardCabai, "cabai capsicum annuum", keyword);
-        setCardVisibility(cardWortel, "wortel daucus carota", keyword);
-    }
-
-    private void setCardVisibility(View card, String dataTanaman, String keyword) {
-        if (keyword.isEmpty() || dataTanaman.contains(keyword)) {
-            card.setVisibility(View.VISIBLE);
-        } else {
-            card.setVisibility(View.GONE);
-        }
-    }
-
     private void daftarSekarang() {
         // User wajib memilih tanaman
-        if (selectedPlant.isEmpty()) {
+        if (selectedPlantId.isEmpty()) {
             Toast.makeText(this, "Pilih tanaman terlebih dahulu", Toast.LENGTH_SHORT).show();
             return;
         }
@@ -198,8 +166,11 @@ public class LoadingActivity extends AppCompatActivity {
                     user.put("nickName", nickName);
                     user.put("fullName", fullName);
                     user.put("email", email);
-                    user.put("selectedPlant", selectedPlant);
-                    user.put("selectedPlantLatin", selectedPlantLatin);
+                    
+                    // Master data reference (Join)
+                    user.put("plantId", selectedPlantId);
+                    user.put("selectedPlant", selectedPlantName); // Keep for quick display
+                    
                     user.put("createdAt", FieldValue.serverTimestamp());
 
                     // Simpan data ke Firestore
@@ -217,7 +188,6 @@ public class LoadingActivity extends AppCompatActivity {
                             })
                             .addOnFailureListener(e -> {
                                 btnStart.setEnabled(true);
-
                                 Toast.makeText(
                                         LoadingActivity.this,
                                         "Gagal menyimpan data: " + e.getMessage(),
@@ -227,9 +197,6 @@ public class LoadingActivity extends AppCompatActivity {
                 })
                 .addOnFailureListener(e -> {
                     btnStart.setEnabled(true);
-
-                    e.printStackTrace();
-
                     Toast.makeText(
                             LoadingActivity.this,
                             "Daftar gagal: " + e.getMessage(),
@@ -240,10 +207,7 @@ public class LoadingActivity extends AppCompatActivity {
 
     private void masukKeMain() {
         Intent intent = new Intent(LoadingActivity.this, MainActivity.class);
-
-        // Hapus halaman sebelumnya dari back stack
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-
         startActivity(intent);
         finish();
     }

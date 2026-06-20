@@ -33,6 +33,11 @@ public class ProfileFragment extends Fragment {
     private TextView tvfullName;
     private TextView tvEmail;
 
+    // Komponen Tanaman (Dynamic)
+    private ImageView ivPlant;
+    private TextView tvPlantName;
+    private TextView tvPlantDescription;
+
     // Card menu pada halaman profile
     private View cardInfoAkun;
     private View cardLogout;
@@ -64,6 +69,11 @@ public class ProfileFragment extends Fragment {
         tvInitial = view.findViewById(R.id.tvInitial);
         tvfullName = view.findViewById(R.id.tvfullName);
         tvEmail = view.findViewById(R.id.tvEmail);
+        
+        ivPlant = view.findViewById(R.id.ivPlant);
+        tvPlantName = view.findViewById(R.id.tvPlantName);
+        tvPlantDescription = view.findViewById(R.id.tvPlantDescription);
+
         cardInfoAkun = view.findViewById(R.id.cardInfoAkun);
         cardLogout = view.findViewById(R.id.cardLogout);
 
@@ -111,6 +121,7 @@ public class ProfileFragment extends Fragment {
      * - fullName
      * - email
      * - photoUrl
+     * - plantId (untuk join ke koleksi plants)
      */
     private void ambilDataProfile() {
 
@@ -135,6 +146,7 @@ public class ProfileFragment extends Fragment {
                         String fullName = documentSnapshot.getString("fullName");
                         String email = documentSnapshot.getString("email");
                         String photoUrl = documentSnapshot.getString("photoUrl");
+                        String plantId = documentSnapshot.getString("plantId");
 
                         // Jika nama kosong, gunakan default "User"
                         if (fullName == null || fullName.trim().isEmpty()) {
@@ -156,39 +168,12 @@ public class ProfileFragment extends Fragment {
                             tvEmail.setText(email);
                         }
 
-                        /*
-                         * Jika user sudah punya foto profil,
-                         * tampilkan foto dari URL menggunakan Glide.
-                         */
-                        if (photoUrl != null && !photoUrl.trim().isEmpty()) {
+                        // Tampilkan Foto Profil
+                        renderProfileImage(photoUrl, fullName);
 
-                            if (ivProfileImage != null) {
-                                ivProfileImage.setVisibility(View.VISIBLE);
-
-                                Glide.with(this)
-                                        .load(photoUrl)
-                                        .centerCrop()
-                                        .into(ivProfileImage);
-                            }
-
-                            if (tvInitial != null) {
-                                tvInitial.setVisibility(View.GONE);
-                            }
-
-                        } else {
-
-                            /*
-                             * Jika belum ada foto profil,
-                             * tampilkan huruf awal dari nama user.
-                             */
-                            if (ivProfileImage != null) {
-                                ivProfileImage.setVisibility(View.GONE);
-                            }
-
-                            if (tvInitial != null) {
-                                tvInitial.setVisibility(View.VISIBLE);
-                                tvInitial.setText(fullName.substring(0, 1).toUpperCase());
-                            }
+                        // Ambil Master Data Tanaman (JOIN)
+                        if (plantId != null && !plantId.isEmpty()) {
+                            ambilDataMasterTanaman(plantId);
                         }
 
                     } else {
@@ -205,6 +190,47 @@ public class ProfileFragment extends Fragment {
                             "Gagal mengambil data profile: " + e.getMessage(),
                             Toast.LENGTH_SHORT
                     ).show();
+                });
+    }
+
+    private void renderProfileImage(String photoUrl, String fullName) {
+        if (photoUrl != null && !photoUrl.trim().isEmpty()) {
+            if (ivProfileImage != null) {
+                ivProfileImage.setVisibility(View.VISIBLE);
+                Glide.with(this).load(photoUrl).centerCrop().into(ivProfileImage);
+            }
+            if (tvInitial != null) tvInitial.setVisibility(View.GONE);
+        } else {
+            if (ivProfileImage != null) ivProfileImage.setVisibility(View.GONE);
+            if (tvInitial != null) {
+                tvInitial.setVisibility(View.VISIBLE);
+                if (fullName != null && !fullName.isEmpty()) {
+                    tvInitial.setText(fullName.substring(0, 1).toUpperCase());
+                }
+            }
+        }
+    }
+
+    /**
+     * Mengambil detail tanaman dari koleksi master 'plants' (JOIN)
+     */
+    private void ambilDataMasterTanaman(String plantId) {
+        db.collection("plants")
+                .document(plantId)
+                .get()
+                .addOnSuccessListener(doc -> {
+                    if (doc.exists() && isAdded()) {
+                        String name = doc.getString("plantName");
+                        String desc = doc.getString("description");
+                        String img = doc.getString("imageUrl");
+
+                        if (tvPlantName != null) tvPlantName.setText(name);
+                        if (tvPlantDescription != null) tvPlantDescription.setText(desc);
+                        
+                        if (img != null && !img.isEmpty() && ivPlant != null) {
+                            Glide.with(this).load(img).into(ivPlant);
+                        }
+                    }
                 });
     }
 
