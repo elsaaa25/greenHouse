@@ -15,10 +15,6 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.GreenHouse">
         <activity
-            android:name=".activity.AccountUserActivity"
-            android:exported="false" />
-        <!-- LoginActivity sebagai halaman pertama saat aplikasi dibuka -->
-        <activity
             android:name=".activity.LoginActivity"
             android:exported="true">
             <intent-filter>

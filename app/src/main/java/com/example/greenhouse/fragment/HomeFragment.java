@@ -4,9 +4,11 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -15,8 +17,11 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import com.bumptech.glide.Glide;
 import com.example.greenhouse.R;
 import com.example.greenhouse.activity.MainActivity;
+import com.example.greenhouse.model.DeviceLive;
+import com.example.greenhouse.model.UserPlant;
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.components.LimitLine;
 import com.github.mikephil.charting.components.XAxis;
@@ -27,16 +32,33 @@ import com.github.mikephil.charting.data.LineDataSet;
 import com.github.mikephil.charting.formatter.ValueFormatter;
 import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.ListenerRegistration;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 public class HomeFragment extends Fragment {
+
+    private static final String TAG = "HomeFragment";
 
     // VIEWS — Informasi & Status
     private TextView tvUserName, tvKelembapan, tvLdrValue, tvStatusAlat, tvStatus;
     private TextView tvLampuStatus, tvLampuMode, tvPompaStatus, tvPompaMode;
+    private TextView tvLampuModeLabel, tvPompaModeLabel;
+    private TextView tvHomePlantName, tvDeviceName, tvLocation;
+    private ImageView ivPlant;
 
     // VIEWS — Switch Kontrol
     private SwitchMaterial switchLampu, switchPompa, switchLampuAuto, switchPompaAuto;
@@ -49,8 +71,14 @@ public class HomeFragment extends Fragment {
     // FIREBASE
     private FirebaseAuth auth;
     private FirebaseFirestore db;
+    private DatabaseReference liveDb, settingsDb, controlDb, historyDb;
+    private ListenerRegistration deviceListener;
+    private ListenerRegistration userPlantListener;
+    private ValueEventListener rtdbLiveListener, rtdbSettingsListener, rtdbControlListener, rtdbHistoryListener;
+    
+    private String userPlantDocId = "";
 
-    // MQTT — Topic constants (untuk pengecekan pesan masuk)
+    // MQTT — Topic constants
     private final String topicSoil         = "esp32/soil";
     private final String topicLdr          = "esp32/ldr";
     private final String topicDeviceStatus = "greenhouse/ben10/device/status";
@@ -64,12 +92,13 @@ public class HomeFragment extends Fragment {
     private final String topicPumpCmd = "esp32/pump/cmd";
 
     // DATA GRAFIK
-    private final List<Entry> soilEntries = new ArrayList<>();
-    private int soilIndex = 0;
     private float batasMin = 60f, batasMaks = 80f;
-    private static final int MIN_OFFSET = 30, MAX_OFFSET = 70;
 
-    private boolean updatingSwitchFromMqtt = false;
+    // FLAGS — Untuk mencegah Race Condition
+    private boolean isUpdatingFromSource = false;
+    private long lastTelemetryTime = 0;
+    private android.os.Handler heartbeatHandler = new android.os.Handler();
+    private Runnable heartbeatRunnable;
 
     // Listener untuk menerima data dari MainActivity
     private MainActivity.OnMqttMessageListener mqttListener;
@@ -84,34 +113,91 @@ public class HomeFragment extends Fragment {
         setupLineChart();
         setupSeekBars();
         setupSwitchListeners();
+        setupHeartbeatCheck();
         return view;
+    }
+
+    private void setupHeartbeatCheck() {
+        heartbeatRunnable = new Runnable() {
+            @Override
+            public void run() {
+                if (isAdded()) {
+                    long now = System.currentTimeMillis();
+                    // Jika data tidak update lebih dari 30 detik, anggap offline
+                    if (lastTelemetryTime > 0 && (now - lastTelemetryTime) > 30000) {
+                        updateOfflineStatus();
+                    }
+                    heartbeatHandler.postDelayed(this, 10000); // Cek tiap 10 detik
+                }
+            }
+        };
+        heartbeatHandler.postDelayed(heartbeatRunnable, 10000);
+    }
+
+    private void updateOfflineStatus() {
+        if (tvStatusAlat != null) {
+            tvStatusAlat.setText("OFFLINE");
+            tvStatusAlat.setTextColor(Color.RED);
+        }
+        if (tvStatus != null) {
+            tvStatus.setText("Perangkat Offline");
+            tvStatus.setBackgroundColor(Color.GRAY);
+        }
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        // 1. Inisialisasi Listener MQTT
         mqttListener = (topic, payload) -> {
             if (isAdded()) {
                 handleIncomingMessage(topic, payload);
             }
         };
 
-        // 2. Daftarkan diri ke MainActivity agar bisa menerima data tanpa koneksi ulang
         if (getActivity() instanceof MainActivity) {
             ((MainActivity) getActivity()).addMqttListener(mqttListener);
         }
 
-        ambilNamaPanggilan();
+        ambilDataUserDanTanaman();
+        integrasiKoleksiDevices();
+        integrasiKoleksiUserPlants();
+        integrasiRTDB();
     }
 
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        // 3. Lepas listener saat tab pindah agar tidak memory leak
+        if (heartbeatHandler != null && heartbeatRunnable != null) {
+            heartbeatHandler.removeCallbacks(heartbeatRunnable);
+        }
         if (getActivity() instanceof MainActivity) {
             ((MainActivity) getActivity()).removeMqttListener(mqttListener);
+        }
+        if (deviceListener != null) {
+            deviceListener.remove();
+            deviceListener = null;
+        }
+        if (userPlantListener != null) {
+            userPlantListener.remove();
+            userPlantListener = null;
+        }
+        
+        removeRtdbListeners();
+    }
+
+    private void removeRtdbListeners() {
+        if (liveDb != null && rtdbLiveListener != null) {
+            liveDb.removeEventListener(rtdbLiveListener);
+        }
+        if (settingsDb != null && rtdbSettingsListener != null) {
+            settingsDb.removeEventListener(rtdbSettingsListener);
+        }
+        if (controlDb != null && rtdbControlListener != null) {
+            controlDb.removeEventListener(rtdbControlListener);
+        }
+        if (historyDb != null && rtdbHistoryListener != null) {
+            historyDb.removeEventListener(rtdbHistoryListener);
         }
     }
 
@@ -127,12 +213,19 @@ public class HomeFragment extends Fragment {
         seekBarMax    = view.findViewById(R.id.seekBarMax);
         tvMinValue    = view.findViewById(R.id.tvMinValue);
         tvMaxValue    = view.findViewById(R.id.tvMaxValue);
+        
+        tvHomePlantName = view.findViewById(R.id.tvHomePlantName);
+        tvDeviceName = view.findViewById(R.id.tvDeviceName);
+        tvLocation = view.findViewById(R.id.tvLocation);
+        ivPlant = view.findViewById(R.id.ivPlant);
 
         tvKelembapan  = findOptionalTextView(view, "tvKelembapan");
         tvLdrValue    = findOptionalTextView(view, "tvLdrValue");
         tvStatusAlat  = findOptionalTextView(view, "tvStatusAlat");
         tvLampuMode   = findOptionalTextView(view, "tvLampuMode");
         tvPompaMode   = findOptionalTextView(view, "tvPompaMode");
+        tvLampuModeLabel = findOptionalTextView(view, "tvLampuModeLabel");
+        tvPompaModeLabel = findOptionalTextView(view, "tvPompaModeLabel");
         switchLampuAuto = findOptionalSwitch(view, "switchLampuAuto");
         switchPompaAuto = findOptionalSwitch(view, "switchPompaAuto");
 
@@ -141,168 +234,438 @@ public class HomeFragment extends Fragment {
 
         SharedPreferences prefs = requireContext().getSharedPreferences("user_prefs", Context.MODE_PRIVATE);
         if (tvUserName != null) tvUserName.setText(prefs.getString("nickName", "User"));
+    }
 
-        if (seekBarMin != null && seekBarMax != null) {
-            batasMin = seekBarMin.getProgress();
-            batasMaks = seekBarMax.getProgress();
-            tvMinValue.setText((int)batasMin + "%");
-            tvMaxValue.setText((int)batasMaks + "%");
+    private void initFirebase() {
+        auth = FirebaseAuth.getInstance();
+        db = FirebaseFirestore.getInstance();
+        FirebaseDatabase rtdb = FirebaseDatabase.getInstance();
+        
+        // Path disesuaikan dengan struktur database
+        liveDb = rtdb.getReference("telemetry").child("GH-001");
+        settingsDb = rtdb.getReference("settings").child("GH-001");
+        controlDb = rtdb.getReference("control").child("GH-001");
+        historyDb = rtdb.getReference("history").child("GH-001").child("hourly");
+    }
+
+    private void integrasiRTDB() {
+        // 1. Live Data (Kelembapan, Status Real-time)
+        rtdbLiveListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (!isAdded()) return;
+                DeviceLive liveData = snapshot.getValue(DeviceLive.class);
+                if (liveData != null) {
+                    updateLiveUI(liveData);
+                }
+            }
+            @Override public void onCancelled(@NonNull DatabaseError error) {}
+        };
+        liveDb.addValueEventListener(rtdbLiveListener);
+
+        // 2. Settings (Batas Kelembapan)
+        rtdbSettingsListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (!isAdded()) return;
+                Integer min = snapshot.child("humidityMin").getValue(Integer.class);
+                Integer max = snapshot.child("humidityMax").getValue(Integer.class);
+                if (min != null) batasMin = min;
+                if (max != null) batasMaks = max;
+                
+                updateSettingsUIFromRtdb();
+            }
+            @Override public void onCancelled(@NonNull DatabaseError error) {}
+        };
+        settingsDb.addValueEventListener(rtdbSettingsListener);
+
+        // 3. Control (Mode & Manual State)
+        rtdbControlListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (!isAdded()) return;
+                String lampMode = snapshot.child("lampMode").getValue(String.class);
+                String pumpMode = snapshot.child("pumpMode").getValue(String.class);
+                Boolean lampManual = snapshot.child("lampManualState").getValue(Boolean.class);
+                Boolean pumpManual = snapshot.child("pumpManualState").getValue(Boolean.class);
+                
+                updateControlUI(lampMode, pumpMode, lampManual, pumpManual);
+            }
+            @Override public void onCancelled(@NonNull DatabaseError error) {}
+        };
+        controlDb.addValueEventListener(rtdbControlListener);
+
+        // 4. History (Untuk Grafik)
+        integrasiRTDBHistory();
+    }
+
+    private void integrasiRTDBHistory() {
+        // Mendapatkan tanggal hari ini (format YYYY-MM-DD sesuai JSON)
+        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault());
+        String today = sdf.format(new java.util.Date());
+
+        rtdbHistoryListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (!isAdded()) return;
+                List<Entry> entries = new ArrayList<>();
+                for (DataSnapshot hourSnapshot : snapshot.child(today).getChildren()) {
+                    try {
+                        String timeKey = hourSnapshot.getKey(); // e.g. "00:00"
+                        Float humidity = hourSnapshot.child("humidity").getValue(Float.class);
+                        if (timeKey != null && humidity != null) {
+                            String[] parts = timeKey.split(":");
+                            float hour = Float.parseFloat(parts[0]);
+                            float minute = Float.parseFloat(parts[1]);
+                            float xValue = hour + (minute / 60f);
+                            entries.add(new Entry(xValue, humidity));
+                        }
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error parsing history: " + e.getMessage());
+                    }
+                }
+                if (!entries.isEmpty()) {
+                    updateChartWithHistory(entries);
+                }
+            }
+            @Override public void onCancelled(@NonNull DatabaseError error) {}
+        };
+        historyDb.addValueEventListener(rtdbHistoryListener);
+    }
+
+    private void updateLiveUI(DeviceLive liveData) {
+        isUpdatingFromSource = true;
+        lastTelemetryTime = System.currentTimeMillis(); // Update heartbeat
+
+        if (tvKelembapan != null) tvKelembapan.setText(liveData.getHumidity() + "%");
+        addSoilToChart(String.valueOf(liveData.getHumidity()));
+        
+        String lampStr = liveData.isLampStatus() ? "ON" : "OFF";
+        String pumpStr = liveData.isPumpStatus() ? "ON" : "OFF";
+        
+        if (tvLampuStatus != null) tvLampuStatus.setText(lampStr);
+        if (tvPompaStatus != null) tvPompaStatus.setText(pumpStr);
+
+        if (tvStatusAlat != null) {
+            if (liveData.isOnline()) {
+                tvStatusAlat.setText("ONLINE");
+                tvStatusAlat.setTextColor(Color.parseColor("#1D9E75")); // Hijau
+            } else {
+                updateOfflineStatus();
+            }
         }
+        
+        if (tvStatus != null && liveData.isOnline()) {
+            tvStatus.setText("Monitoring Aktif");
+            tvStatus.setBackgroundResource(R.drawable.bg_status_watering);
+        }
+        isUpdatingFromSource = false;
+    }
+
+    private void updateSettingsUIFromRtdb() {
+        isUpdatingFromSource = true;
+        if (seekBarMin != null) seekBarMin.setProgress((int) batasMin);
+        if (seekBarMax != null) seekBarMax.setProgress((int) batasMaks);
+        if (tvMinValue != null) tvMinValue.setText((int) batasMin + "%");
+        if (tvMaxValue != null) tvMaxValue.setText((int) batasMaks + "%");
+        updateLimitLines();
+        isUpdatingFromSource = false;
+    }
+
+    private void updateControlUI(String lampMode, String pumpMode, Boolean lampManual, Boolean pumpManual) {
+        isUpdatingFromSource = true;
+        if (tvLampuMode != null) tvLampuMode.setText(lampMode);
+        if (tvPompaMode != null) tvPompaMode.setText(pumpMode);
+
+        boolean isLampAuto = "AUTO".equalsIgnoreCase(lampMode);
+        boolean isPumpAuto = "AUTO".equalsIgnoreCase(pumpMode);
+
+        // Update Label Manual/Otomatis
+        if (tvLampuModeLabel != null) tvLampuModeLabel.setText(isLampAuto ? "Otomatis" : "Manual");
+        if (tvPompaModeLabel != null) tvPompaModeLabel.setText(isPumpAuto ? "Otomatis" : "Manual");
+
+        if (switchLampuAuto != null) switchLampuAuto.setChecked(isLampAuto);
+        if (switchPompaAuto != null) switchPompaAuto.setChecked(isPumpAuto);
+        
+        if (switchLampu != null) {
+            switchLampu.setEnabled(!isLampAuto);
+            if (lampManual != null) switchLampu.setChecked(lampManual);
+        }
+        if (switchPompa != null) {
+            switchPompa.setEnabled(!isPumpAuto);
+            if (pumpManual != null) switchPompa.setChecked(pumpManual);
+        }
+        isUpdatingFromSource = false;
+    }
+
+    private void updateChartWithHistory(List<Entry> entries) {
+        if (lineChart == null) return;
+        LineData data = lineChart.getData();
+        LineDataSet dataSet;
+        
+        if (data == null) {
+            dataSet = new LineDataSet(entries, "Kelembapan");
+            dataSet.setMode(LineDataSet.Mode.CUBIC_BEZIER);
+            dataSet.setColor(Color.parseColor("#1D9E75"));
+            dataSet.setLineWidth(2.5f);
+            dataSet.setDrawCircles(false);
+            dataSet.setDrawValues(false);
+            dataSet.setDrawFilled(true);
+            dataSet.setFillColor(Color.parseColor("#1D9E75"));
+            dataSet.setFillAlpha(35);
+            data = new LineData(dataSet);
+            lineChart.setData(data);
+        } else {
+            dataSet = (LineDataSet) data.getDataSetByIndex(0);
+            dataSet.setValues(entries);
+            data.notifyDataChanged();
+        }
+        lineChart.notifyDataSetChanged();
+        lineChart.invalidate();
+    }
+
+    private void integrasiKoleksiUserPlants() {
+        if (auth.getCurrentUser() == null) return;
+        String uid = auth.getCurrentUser().getUid();
+        DocumentReference userRef = db.collection("users").document(uid);
+
+        userPlantListener = db.collection("userPlants")
+                .whereEqualTo("ownerId", userRef)
+                .limit(1)
+                .addSnapshotListener((snapshots, e) -> {
+                    if (e != null || snapshots == null || snapshots.isEmpty()) return;
+                    userPlantDocId = snapshots.getDocuments().get(0).getId();
+                    UserPlant userPlant = snapshots.getDocuments().get(0).toObject(UserPlant.class);
+                    if (userPlant != null) {
+                        updateSettingsUI(userPlant);
+                    }
+                });
+    }
+
+    private void updateSettingsUI(UserPlant userPlant) {
+        isUpdatingFromSource = true;
+        if (tvHomePlantName != null) tvHomePlantName.setText(userPlant.getDisplayName());
+        if (tvLocation != null) tvLocation.setText("Lokasi: " + userPlant.getLocation());
+        batasMin = userPlant.getHumidityMin();
+        batasMaks = userPlant.getHumidityMax();
+        if (seekBarMin != null) seekBarMin.setProgress((int) batasMin);
+        if (seekBarMax != null) seekBarMax.setProgress((int) batasMaks);
+        if (tvMinValue != null) tvMinValue.setText((int) batasMin + "%");
+        if (tvMaxValue != null) tvMaxValue.setText((int) batasMaks + "%");
+        updateLimitLines();
+        boolean isLampAuto = "AUTO".equalsIgnoreCase(userPlant.getLampMode());
+        boolean isPumpAuto = "AUTO".equalsIgnoreCase(userPlant.getPumpMode());
+        if (switchLampuAuto != null) switchLampuAuto.setChecked(isLampAuto);
+        if (switchPompaAuto != null) switchPompaAuto.setChecked(isPumpAuto);
+        if (switchLampu != null) switchLampu.setEnabled(!isLampAuto);
+        if (switchPompa != null) switchPompa.setEnabled(!isPumpAuto);
+        if (tvLampuMode != null) tvLampuMode.setText(userPlant.getLampMode());
+        if (tvPompaMode != null) tvPompaMode.setText(userPlant.getPumpMode());
+
+        if (tvLampuModeLabel != null) tvLampuModeLabel.setText(isLampAuto ? "Otomatis" : "Manual");
+        if (tvPompaModeLabel != null) tvPompaModeLabel.setText(isPumpAuto ? "Otomatis" : "Manual");
+
+        isUpdatingFromSource = false;
+    }
+
+    private void integrasiKoleksiDevices() {
+        if (auth.getCurrentUser() == null) return;
+        deviceListener = db.collection("devices").document("GH-001")
+                .addSnapshotListener((snapshot, e) -> {
+                    if (snapshot != null && snapshot.exists() && isAdded()) {
+                        String name = snapshot.getString("deviceName");
+                        if (tvDeviceName != null) tvDeviceName.setText(name);
+                    }
+                });
+    }
+
+    private void ambilDataUserDanTanaman() {
+        if (auth.getCurrentUser() == null) return;
+        db.collection("users").document(auth.getCurrentUser().getUid()).get()
+                .addOnSuccessListener(doc -> {
+                    if (doc.exists() && isAdded()) {
+                        String name = doc.getString("nickName");
+                        if (name != null && tvUserName != null) tvUserName.setText(name);
+                    }
+                });
     }
 
     private void setupLineChart() {
         if (lineChart == null) return;
-
         lineChart.getDescription().setEnabled(false);
         lineChart.getLegend().setEnabled(false);
-        lineChart.setExtraOffsets(10f, 40f, 10f, 20f); // Ruang untuk label Maks/Min dan Sumbu X
-
-        // Sumbu Y (Kiri)
+        lineChart.setExtraOffsets(10f, 40f, 10f, 20f);
         YAxis yAxis = lineChart.getAxisLeft();
-        yAxis.setAxisMinimum(40f); // Mulai dari 40% agar grafik terlihat "naik"
+        yAxis.setAxisMinimum(40f);
         yAxis.setAxisMaximum(100f);
-        yAxis.setLabelCount(6, false); // Agar tidak dempet
+        yAxis.setLabelCount(6, false);
         yAxis.setGranularity(5f);
-        yAxis.setDrawAxisLine(false); // Hilangkan garis pinggir hitam
-        yAxis.setGridColor(Color.parseColor("#E0E0E0")); // Grid halus
+        yAxis.setDrawAxisLine(false);
+        yAxis.setGridColor(Color.parseColor("#E0E0E0"));
         yAxis.setValueFormatter(new ValueFormatter() {
-            @Override
-            public String getFormattedValue(float value) {
-                return (int) value + "%";
-            }
+            @Override public String getFormattedValue(float value) { return (int) value + "%"; }
         });
-
-        // Sumbu X (Bawah)
         XAxis xAxis = lineChart.getXAxis();
         xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
-        xAxis.setDrawGridLines(false);
+        xAxis.setDrawGridLines(true);
+        xAxis.setGridColor(Color.parseColor("#E0E0E0"));
         xAxis.setDrawAxisLine(false);
-        xAxis.setAxisMinimum(0f); // Cegah angka -1
+        xAxis.setAxisMinimum(0f);
+        xAxis.setAxisMaximum(24f);
+        xAxis.setGranularity(4f); // Interval grid 4 jam
+        xAxis.setGranularityEnabled(true);
+        xAxis.setLabelCount(7, true); // Menampilkan label 0, 4, 8, 12, 16, 20, 24
         xAxis.setValueFormatter(new ValueFormatter() {
             @Override
             public String getFormattedValue(float value) {
-                if (lineChart.getData() == null) return "";
-                float max = lineChart.getData().getXMax();
-                int diff = (int) (value - max);
-                if (diff == 0) return "Skrng";
-                if (diff < 0 && diff % 30 == 0) return diff + "s"; // Muncul per 30 detik
-                return "";
+                int hour = (int) value % 24;
+                return String.format("%02d.00", hour);
             }
         });
-
         lineChart.getAxisRight().setEnabled(false);
+        
+        // Horizontal Scroll & Gap Settings
+        lineChart.setDragEnabled(true);
+        lineChart.setScaleXEnabled(true);
+        lineChart.setScaleYEnabled(false);
+        lineChart.setPinchZoom(false);
+        lineChart.setVisibleXRangeMaximum(12f); // Menampilkan 12 jam agar label 4 jam sekali memiliki ruang yang cukup
+
         updateLimitLines();
     }
 
-
     private void updateLimitLines() {
         YAxis yAxis = lineChart.getAxisLeft();
-        yAxis.removeAllLimitLines(); // Hapus garis lama agar tidak menumpuk
-
-        // Garis Maks
+        yAxis.removeAllLimitLines();
         LimitLine llMaks = new LimitLine(batasMaks, "Maks " + (int)batasMaks + "%");
         llMaks.setLineColor(Color.parseColor("#E24B4A"));
         llMaks.setLineWidth(1.2f);
         llMaks.setTextColor(Color.parseColor("#E24B4A"));
         llMaks.setLabelPosition(LimitLine.LimitLabelPosition.RIGHT_TOP);
         llMaks.setTextSize(9f);
-
-        // Garis Min
         LimitLine llMin = new LimitLine(batasMin, "Min " + (int)batasMin + "%");
         llMin.setLineColor(Color.parseColor("#378ADD"));
         llMin.setLineWidth(1.2f);
         llMin.setTextColor(Color.parseColor("#378ADD"));
         llMin.setLabelPosition(LimitLine.LimitLabelPosition.RIGHT_BOTTOM);
         llMin.setTextSize(9f);
-
         yAxis.addLimitLine(llMaks);
         yAxis.addLimitLine(llMin);
-
-        lineChart.invalidate(); // REFRESH GRAFIK
+        lineChart.invalidate();
     }
 
     private void setupSeekBars() {
         if (seekBarMin == null || seekBarMax == null) return;
-
-        seekBarMin.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+        SeekBar.OnSeekBarChangeListener listener = new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                // Jika progress 0-100, kita ambil langsung nilainya
-                batasMin = progress;
-                if (tvMinValue != null) tvMinValue.setText((int) batasMin + "%");
+                if (!fromUser || isUpdatingFromSource) return;
+                if (seekBar.getId() == R.id.seekBarMin) {
+                    batasMin = progress;
+                    if (tvMinValue != null) tvMinValue.setText(progress + "%");
+                } else {
+                    batasMaks = progress;
+                    if (tvMaxValue != null) tvMaxValue.setText(progress + "%");
+                }
                 updateLimitLines();
             }
             @Override public void onStartTrackingTouch(SeekBar seekBar) {}
-            @Override public void onStopTrackingTouch(SeekBar seekBar) {}
-        });
-
-        seekBarMax.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                batasMaks = progress;
-                if (tvMaxValue != null) tvMaxValue.setText((int) batasMaks + "%");
-                updateLimitLines();
+            @Override public void onStopTrackingTouch(SeekBar seekBar) {
+                pushSettingsToDatabase();
             }
-            @Override public void onStartTrackingTouch(SeekBar seekBar) {}
-            @Override public void onStopTrackingTouch(SeekBar seekBar) {}
-        });
+        };
+        seekBarMin.setOnSeekBarChangeListener(listener);
+        seekBarMax.setOnSeekBarChangeListener(listener);
+    }
+
+    private void pushSettingsToDatabase() {
+        // 1. Update RTDB (Untuk ESP32)
+        Map<String, Object> rtdbUpdates = new HashMap<>();
+        rtdbUpdates.put("humidityMin", (int) batasMin);
+        rtdbUpdates.put("humidityMax", (int) batasMaks);
+        rtdbUpdates.put("updatedAt", System.currentTimeMillis());
+        settingsDb.updateChildren(rtdbUpdates);
+
+        // 2. Update Firestore (Untuk Persistence)
+        if (!userPlantDocId.isEmpty()) {
+            Map<String, Object> firestoreUpdates = new HashMap<>();
+            firestoreUpdates.put("humidityMin", (int) batasMin);
+            firestoreUpdates.put("humidityMax", (int) batasMaks);
+            db.collection("userPlants").document(userPlantDocId).update(firestoreUpdates);
+        }
     }
 
     private void setupSwitchListeners() {
         if (switchLampu != null) {
             switchLampu.setOnCheckedChangeListener((v, isChecked) -> {
-                if (updatingSwitchFromMqtt) return;
+                if (isUpdatingFromSource) return;
+                
+                // Update Firebase RTDB
+                controlDb.child("lampManualState").setValue(isChecked);
+                controlDb.child("updatedAt").setValue(System.currentTimeMillis());
+                
+                // Publish via MQTT (Opsional)
                 publishCommand(topicLampCmd, isChecked ? "ON" : "OFF");
             });
         }
         if (switchPompa != null) {
             switchPompa.setOnCheckedChangeListener((v, isChecked) -> {
-                if (updatingSwitchFromMqtt) return;
+                if (isUpdatingFromSource) return;
+                
+                // Update Firebase RTDB
+                controlDb.child("pumpManualState").setValue(isChecked);
+                controlDb.child("updatedAt").setValue(System.currentTimeMillis());
+                
+                // Publish via MQTT (Opsional)
                 publishCommand(topicPumpCmd, isChecked ? "ON" : "OFF");
             });
         }
         if (switchLampuAuto != null) {
             switchLampuAuto.setOnCheckedChangeListener((v, isChecked) -> {
-                if (updatingSwitchFromMqtt) return;
-                if (isChecked) publishCommand(topicLampCmd, "AUTO");
+                if (isUpdatingFromSource) return;
+                String mode = isChecked ? "AUTO" : "MANUAL";
+                
+                // Update ke RTDB
+                controlDb.child("lampMode").setValue(mode);
+                controlDb.child("updatedAt").setValue(System.currentTimeMillis());
+
+                // Update Firestore
+                updateModeInDatabase("lampMode", mode);
+                publishCommand(topicLampCmd, mode);
             });
         }
         if (switchPompaAuto != null) {
             switchPompaAuto.setOnCheckedChangeListener((v, isChecked) -> {
-                if (updatingSwitchFromMqtt) return;
-                if (isChecked) publishCommand(topicPumpCmd, "AUTO");
+                if (isUpdatingFromSource) return;
+                String mode = isChecked ? "AUTO" : "MANUAL";
+
+                // Update ke RTDB
+                controlDb.child("pumpMode").setValue(mode);
+                controlDb.child("updatedAt").setValue(System.currentTimeMillis());
+
+                // Update Firestore
+                updateModeInDatabase("pumpMode", mode);
+                publishCommand(topicPumpCmd, mode);
             });
+        }
+    }
+    
+    private void updateModeInDatabase(String field, String mode) {
+        if (!userPlantDocId.isEmpty()) {
+            db.collection("userPlants").document(userPlantDocId).update(field, mode);
         }
     }
 
     private void handleIncomingMessage(String topic, String payload) {
-        if (topic.equals(topicSoil)) {
-            if (tvKelembapan != null) tvKelembapan.setText(payload + "%");
-            addSoilToChart(payload);
-        } else if (topic.equals(topicLdr)) {
+        if (topic.equals(topicLdr)) {
             if (tvLdrValue != null) tvLdrValue.setText(payload);
         } else if (topic.equals(topicDeviceStatus)) {
             if (tvStatusAlat != null) tvStatusAlat.setText(payload);
-            boolean online = payload.equalsIgnoreCase("ON") || payload.equalsIgnoreCase("ONLINE");
-            if (tvStatus != null) tvStatus.setText(online ? "Monitoring Aktif" : "Monitoring Nonaktif");
-        } else if (topic.equals(topicLampStatus)) {
-            if (tvLampuStatus != null) tvLampuStatus.setText(payload);
-            setSwitchFromMqtt(switchLampu, payload.equalsIgnoreCase("ON"));
-        } else if (topic.equals(topicPumpStatus)) {
-            if (tvPompaStatus != null) tvPompaStatus.setText(payload);
-            setSwitchFromMqtt(switchPompa, payload.equalsIgnoreCase("ON"));
-        } else if (topic.equals(topicLampMode)) {
-            if (tvLampuMode != null) tvLampuMode.setText(payload);
-            setSwitchFromMqtt(switchLampuAuto, payload.equalsIgnoreCase("AUTO"));
-        } else if (topic.equals(topicPumpMode)) {
-            if (tvPompaMode != null) tvPompaMode.setText(payload);
-            setSwitchFromMqtt(switchPompaAuto, payload.equalsIgnoreCase("AUTO"));
         }
     }
 
     private void publishCommand(String topic, String command) {
         if (getActivity() instanceof MainActivity) {
-            // Memanggil fungsi publish dari MainActivity pusat
             ((MainActivity) getActivity()).publishCommand(topic, command);
         }
     }
@@ -311,77 +674,43 @@ public class HomeFragment extends Fragment {
         try {
             float soilValue = Float.parseFloat(payload);
 
-            // 1. Ambil data yang sudah ada di chart (agar lebih ringan daripada membuat baru setiap detik)
+            // Hitung nilai X berdasarkan waktu saat ini (0 - 24 jam)
+            java.util.Calendar calendar = java.util.Calendar.getInstance();
+            float hour = calendar.get(java.util.Calendar.HOUR_OF_DAY);
+            float minute = calendar.get(java.util.Calendar.MINUTE);
+            float xValue = hour + (minute / 60f);
+
             LineData data = lineChart.getData();
-
             if (data == null) {
-                // Jika data belum ada, buat dataset pertama kali
                 LineDataSet dataSet = new LineDataSet(new ArrayList<>(), "Kelembapan");
-
-                // --- STYLING PROFESIONAL ---
-                dataSet.setMode(LineDataSet.Mode.CUBIC_BEZIER); // Membuat garis melengkung halus (tidak kaku)
-                dataSet.setColor(Color.parseColor("#1D9E75"));  // Warna Teal yang lebih elegan
-                dataSet.setLineWidth(2.5f);                     // Garis sedikit lebih tebal
-                dataSet.setDrawCircles(false);                  // Hilangkan titik bulat data
-                dataSet.setDrawValues(false);                   // Hilangkan angka di atas garis
-
-                // Area di bawah garis (Gradient fill)
+                dataSet.setMode(LineDataSet.Mode.CUBIC_BEZIER);
+                dataSet.setColor(Color.parseColor("#1D9E75"));
+                dataSet.setLineWidth(2.5f);
+                dataSet.setDrawCircles(false);
+                dataSet.setDrawValues(false);
                 dataSet.setDrawFilled(true);
                 dataSet.setFillColor(Color.parseColor("#1D9E75"));
-                dataSet.setFillAlpha(35);                       // Transparansi area bawah
-
+                dataSet.setFillAlpha(35);
                 data = new LineData(dataSet);
                 lineChart.setData(data);
             }
 
-            // 2. Tambahkan entry baru ke dataset yang sudah ada
-            data.addEntry(new Entry(soilIndex++, soilValue), 0);
-
-            // 3. Batasi memori (hapus data lama jika sudah lebih dari 600 data/10 menit)
-            if (data.getEntryCount() > 600) {
-                data.getDataSetByIndex(0).removeEntry(0);
+            // Jika hari berganti (xValue baru lebih kecil dari xValue terakhir), bersihkan data lama
+            if (data.getEntryCount() > 0 && xValue < data.getXMax()) {
+                data.getDataSetByIndex(0).clear();
             }
 
-            // 4. Beritahu chart bahwa data berubah
+            data.addEntry(new Entry(xValue, soilValue), 0);
             data.notifyDataChanged();
             lineChart.notifyDataSetChanged();
 
-            // --- KUNCI TAMPILAN 3 MENIT ---
-            // Menampilkan 180 unit (detik) terakhir agar grafik tidak terlihat kerdil/sempit
-            lineChart.setVisibleXRangeMaximum(180f);
-
-            // Selalu geser ke arah data terbaru (paling kanan)
-            lineChart.moveViewToX(data.getXMax());
-
-            // Refresh tampilan
+            // Set tampilan agar lebih lega dan bisa digeser
+            lineChart.setVisibleXRangeMaximum(12f);
+            lineChart.moveViewToX(xValue);
             lineChart.invalidate();
-
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
-
-    private void setSwitchFromMqtt(SwitchMaterial sw, boolean checked) {
-        if (sw == null) return;
-        updatingSwitchFromMqtt = true;
-        sw.setChecked(checked);
-        updatingSwitchFromMqtt = false;
-    }
-
-    private void initFirebase() {
-        auth = FirebaseAuth.getInstance();
-        db = FirebaseFirestore.getInstance();
-    }
-
-    private void ambilNamaPanggilan() {
-        if (auth == null || auth.getCurrentUser() == null) return;
-        db.collection("users").document(auth.getCurrentUser().getUid()).get()
-                .addOnSuccessListener(doc -> {
-                    if (doc.exists() && isAdded()) {
-                        String name = doc.getString("nickName");
-                        if (name != null && tvUserName != null) tvUserName.setText(name);
-                    }
-                });
     }
 
     private TextView findOptionalTextView(View view, String idName) {

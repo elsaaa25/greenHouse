@@ -2,6 +2,7 @@ package com.example.greenhouse.activity;
 
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
@@ -9,6 +10,9 @@ import androidx.fragment.app.Fragment;
 import com.example.greenhouse.R;
 import com.example.greenhouse.databinding.ActivityMainBinding;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import org.eclipse.paho.client.mqttv3.IMqttActionListener;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
@@ -28,6 +32,8 @@ public class MainActivity extends AppCompatActivity {
 
     private ActivityMainBinding binding;
     private MqttAsyncClient mqttClient;
+    private FirebaseFirestore db;
+    private DatabaseReference rtDb;
 
     // =========================
     // MQTT CONFIG
@@ -79,7 +85,54 @@ public class MainActivity extends AppCompatActivity {
         BottomNavigasi bottomNavigasi = new BottomNavigasi(this, binding);
         bottomNavigasi.setup();
 
+        // 1. Initialize Cloud Firestore (Step 3 in Assistant)
+        db = FirebaseFirestore.getInstance();
+
+        // 2. Initialize Realtime Database
+        rtDb = FirebaseDatabase.getInstance().getReference();
+
+        // 3. Add Test Data (Step 4 in Assistant)
+        // testFirestore();
+        // testRealtimeDatabase();
+
         connectMQTT();
+    }
+
+    /**
+     * Contoh menambahkan data ke Firestore sesuai petunjuk Assistant.
+     */
+    private void testFirestore() {
+        // Create a new user with a first and last name
+        java.util.Map<String, Object> user = new java.util.HashMap<>();
+        user.put("first", "Ada");
+        user.put("last", "Lovelace");
+        user.put("born", 1815);
+
+        // Add a new document with a generated ID
+        db.collection("users")
+                .add(user)
+                .addOnSuccessListener(documentReference -> {
+                    Log.d("FIRESTORE_TEST", "DocumentSnapshot added with ID: " + documentReference.getId());
+                    Toast.makeText(this, "Data Firestore berhasil ditambahkan!", Toast.LENGTH_SHORT).show();
+                })
+                .addOnFailureListener(e -> {
+                    Log.w("FIRESTORE_TEST", "Error adding document", e);
+                });
+    }
+
+    /**
+     * Contoh menambahkan data ke Realtime Database.
+     */
+    private void testRealtimeDatabase() {
+        String message = "Hello from GreenHouse Android!";
+        rtDb.child("test_connection").setValue(message)
+                .addOnSuccessListener(unused -> {
+                    Log.d("RTDB_TEST", "Data berhasil dikirim ke Realtime Database");
+                    Toast.makeText(this, "Realtime Database Terhubung!", Toast.LENGTH_SHORT).show();
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("RTDB_TEST", "Gagal kirim data ke RTDB: " + e.getMessage());
+                });
     }
 
     // =========================

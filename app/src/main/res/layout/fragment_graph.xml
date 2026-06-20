@@ -57,24 +57,24 @@
         app:layout_constraintTop_toBottomOf="@id/headerBackground">
 
         <TextView
-            android:id="@+id/btnMinggu"
+            android:id="@+id/btnHarian"
             android:layout_width="100dp"
             android:layout_height="32dp"
             android:background="@drawable/bg_filter_selected"
             android:gravity="center"
-            android:text="Minggu"
+            android:text="Harian"
             android:textColor="#FFFFFF"
             android:textSize="14sp"
             android:fontFamily="@font/poppins"/>
 
         <TextView
-            android:id="@+id/btnBulan"
+            android:id="@+id/btnMingguan"
             android:layout_width="100dp"
             android:layout_height="32dp"
             android:layout_marginStart="16dp"
             android:background="@drawable/bg_filter_unselected"
             android:gravity="center"
-            android:text="Bulan"
+            android:text="Mingguan"
             android:textColor="#7CB342"
             android:textSize="14sp"
             android:fontFamily="@font/poppins"/>
@@ -102,88 +102,87 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:text="Data Sensor Kelembapan (per hari)"
+                android:text="Data Sensor Kelembapan"
                 android:textColor="#000000"
-                android:textSize="14sp"  android:fontFamily="@font/poppins"/>
+                android:textSize="14sp"
+                android:fontFamily="@font/poppins"/>
 
+            <!-- Card Grafik Kelembapan (Mengikuti HomeFragment style) -->
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
-                android:layout_height="280dp"
+                android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                app:cardCornerRadius="20dp"
-                app:cardElevation="0dp"
-                app:cardBackgroundColor="#FFFFFF"
-                app:strokeWidth="1dp"
-                app:strokeColor="#000000">
+                android:layout_marginBottom="12dp"
+                app:cardCornerRadius="14dp"
+                app:cardElevation="2dp"
+                app:cardBackgroundColor="#FFFFFF">
 
-                <RelativeLayout
+                <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:padding="16dp">
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="12dp">
 
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="100" android:layout_alignParentTop="true" android:textSize="12sp" android:fontFamily="@font/poppins"/>
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="50" android:layout_centerVertical="true" android:textSize="12sp"  android:fontFamily="@font/poppins"/>
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0" android:layout_alignParentBottom="true" android:layout_marginBottom="80dp" android:textSize="12sp" android:fontFamily="@font/poppins"/>
-
-                    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#EEEEEE" android:layout_alignParentTop="true" android:layout_marginTop="10dp" android:layout_marginStart="30dp" />
-                    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#EEEEEE" android:layout_centerVertical="true" android:layout_marginStart="30dp" />
-                    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#000000" android:layout_alignParentBottom="true" android:layout_marginBottom="95dp" android:layout_marginStart="30dp" />
-
-                    <com.example.greenhouse.fragment.LineChartView
-                        android:id="@+id/lineChartKelembapan"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:layout_marginStart="30dp"
-                        android:layout_marginBottom="80dp"
-                        android:paddingStart="20dp"
-                        android:paddingEnd="20dp" />
-
-                    <LinearLayout
-                        android:id="@+id/labelsKelembapan"
-                        android:layout_width="match_parent"
+                    <TextView
+                        android:id="@+id/tvChartSubtitle"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_alignParentBottom="true"
-                        android:layout_marginStart="30dp"
-                        android:layout_marginBottom="55dp"
-                        android:orientation="horizontal" />
+                        android:text="Data kelembapan dari histori"
+                        android:textSize="11sp"
+                        android:textColor="#555555"
+                        android:layout_marginBottom="8dp"/>
 
-                    <!-- Container Legenda Kelembapan -->
-                    <LinearLayout
+                    <com.github.mikephil.charting.charts.LineChart
+                        android:id="@+id/lineChartHistory"
                         android:layout_width="match_parent"
+                        android:layout_height="280dp"
+                        android:layout_marginTop="8dp" />
+
+                    <!-- Legenda -->
+                    <LinearLayout
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_alignParentBottom="true"
-                        android:layout_marginBottom="5dp"
-                        android:orientation="vertical">
+                        android:orientation="horizontal"
+                        android:layout_marginTop="12dp"
+                        android:gravity="center_vertical">
 
-                        <LinearLayout
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_gravity="center_horizontal"
-                            android:gravity="center_vertical"
-                            android:orientation="horizontal">
-                            <View android:layout_width="12dp" android:layout_height="12dp" android:background="#9575CD" />
-                            <TextView
-                                android:id="@+id/tvAvgKelembapan"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginStart="8dp"
-                                android:text="Rata-rata : 61%"
-                                android:textSize="12sp"  android:fontFamily="@font/poppins"/>
-                        </LinearLayout>
-
+                        <View
+                            android:layout_width="16dp"
+                            android:layout_height="2dp"
+                            android:background="#1D9E75"/>
                         <TextView
-                            android:id="@+id/tvOptimalKelembapan"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_gravity="start"
-                            android:layout_marginStart="40dp"
-                            android:layout_marginTop="5dp"
+                            android:text=" Kelembapan"
+                            android:textSize="10sp"
+                            android:textColor="@color/gray_dark"
                             android:fontFamily="@font/poppins"
-                            android:text="Kelembapan ideal ="
-                            android:textColor="#757575"
-                            android:textSize="12sp" />
+                            android:layout_marginEnd="12dp"/>
+
+                        <View
+                            android:layout_width="12dp"
+                            android:layout_height="12dp"
+                            android:background="#9575CD" />
+                        <TextView
+                            android:id="@+id/tvAvgKelembapan"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="4dp"
+                            android:text="Rata-rata"
+                            android:textSize="10sp"
+                            android:fontFamily="@font/poppins"/>
                     </LinearLayout>
-                </RelativeLayout>
+
+                    <TextView
+                        android:id="@+id/tvOptimalKelembapan"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:fontFamily="@font/poppins"
+                        android:text="Kelembapan ideal = 60% - 80%"
+                        android:textColor="#757575"
+                        android:textSize="11sp" />
+                </LinearLayout>
             </androidx.cardview.widget.CardView>
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>

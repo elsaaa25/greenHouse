@@ -132,6 +132,7 @@
                     android:orientation="horizontal">
 
                     <ImageView
+                        android:id="@+id/ivPlant"
                         android:layout_width="80dp"
                         android:layout_height="80dp"
                         android:src="@drawable/pakcoy_profile" />
@@ -144,18 +145,20 @@
                         android:orientation="vertical">
 
                         <TextView
+                            android:id="@+id/tvPlantName"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Pakcoy Brassica rapa"
+                            android:text="Nama Tanaman"
                             android:textColor="#000000"
                             android:textSize="18sp"
                             android:textStyle="bold"  android:fontFamily="@font/poppins"/>
 
                         <TextView
+                            android:id="@+id/tvPlantDescription"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="4dp"
-                            android:text="Sayuran daun dari famili Brassicaceae yang dapat dipanen hanya dalam 25-30 hari."
+                            android:text="Deskripsi tanaman akan muncul di sini."
                             android:textColor="#616161"
                             android:textSize="11sp"
                             android:lineSpacingExtra="2dp" android:fontFamily="@font/poppins"/>
