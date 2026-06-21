@@ -7,6 +7,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -33,6 +34,8 @@ public class NotifikasiFragment extends Fragment {
     private static final String TAG = "NotifikasiFragment";
     
     private RecyclerView rvNotifikasi;
+    private ProgressBar pbNotif;
+    private TextView tvEmptyNotif;
     private NotificationAdapter adapter;
     private List<Notification> notificationList = new ArrayList<>();
     
@@ -48,6 +51,9 @@ public class NotifikasiFragment extends Fragment {
         auth = FirebaseAuth.getInstance();
 
         rvNotifikasi = view.findViewById(R.id.rvNotifikasi);
+        pbNotif = view.findViewById(R.id.pbNotif);
+        tvEmptyNotif = view.findViewById(R.id.tvEmptyNotif);
+
         rvNotifikasi.setLayoutManager(new LinearLayoutManager(getContext()));
 
         adapter = new NotificationAdapter(notificationList);
@@ -65,6 +71,8 @@ public class NotifikasiFragment extends Fragment {
     private void observeNotifications() {
         if (auth.getCurrentUser() == null) return;
         
+        if (pbNotif != null) pbNotif.setVisibility(View.VISIBLE);
+        
         String uid = auth.getCurrentUser().getUid();
         DocumentReference userRef = db.collection("users").document(uid);
 
@@ -73,6 +81,8 @@ public class NotifikasiFragment extends Fragment {
                 .whereEqualTo("ownerId", userRef)
                 .orderBy("createdAt", Query.Direction.DESCENDING)
                 .addSnapshotListener((snapshots, e) -> {
+                    if (pbNotif != null) pbNotif.setVisibility(View.GONE);
+
                     if (e != null) {
                         Log.w(TAG, "Listen failed.", e);
                         return;
@@ -85,6 +95,11 @@ public class NotifikasiFragment extends Fragment {
                             notificationList.add(notification);
                         }
                         adapter.notifyDataSetChanged();
+                        
+                        // Handle empty state
+                        if (tvEmptyNotif != null) {
+                            tvEmptyNotif.setVisibility(notificationList.isEmpty() ? View.VISIBLE : View.GONE);
+                        }
                     }
                 });
     }
@@ -125,20 +140,34 @@ public class NotifikasiFragment extends Fragment {
             int iconRes;
             int iconBg;
             
-            String type = item.getType() != null ? item.getType() : "";
+            String type = item.getType() != null ? item.getType().toUpperCase() : "";
             switch (type) {
+                case "LOW HUMIDITY":
                 case "LOW_HUMIDITY":
+                case "HIGH HUMIDITY":
                 case "HIGH_HUMIDITY":
-                    iconRes = R.drawable.ic_air;
+                    iconRes = R.drawable.ic_humidity;
                     iconBg = R.drawable.bg_orange_rounded;
                     break;
+                case "PUMP AUTO ON":
                 case "PUMP_AUTO_ON":
+                case "PUMP ON":
+                case "PUMP_ON":
                     iconRes = R.drawable.ic_pump;
                     iconBg = R.drawable.bg_orange_rounded;
                     break;
+                case "LAMP ON":
+                case "LAMP_ON":
+                    iconRes = R.drawable.ic_light;
+                    iconBg = R.drawable.bg_orange_rounded;
+                    break;
                 case "DEVICE ONLINE":
-                default:
+                case "DEVICE_ONLINE":
                     iconRes = R.drawable.ic_verified;
+                    iconBg = R.drawable.bg_verified_rounded;
+                    break;
+                default:
+                    iconRes = R.drawable.ic_notif;
                     iconBg = R.drawable.bg_verified_rounded;
                     break;
             }
@@ -153,9 +182,9 @@ public class NotifikasiFragment extends Fragment {
                 holder.container.setBackgroundResource(R.drawable.bg_notif_default);
             }
             
-            // Optional: Click to mark as read
+            // Mark as read on click
             holder.itemView.setOnClickListener(v -> {
-                if (!item.isRead()) {
+                if (!item.isRead() && item.getId() != null) {
                     db.collection("notifications").document(item.getId()).update("isRead", true);
                 }
             });

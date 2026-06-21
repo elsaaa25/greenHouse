@@ -2,6 +2,7 @@ package com.example.greenhouse.fragment;
 
 import android.graphics.Color;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,14 +20,33 @@ import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
 import com.github.mikephil.charting.formatter.ValueFormatter;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.TreeMap;
 
 public class GraphFragment extends Fragment {
 
+    private static final String TAG = "GraphFragment";
     private TextView btnHarian, btnMingguan, tvLabelKelembapan, tvAvgKelembapan;
     private LineChart lineChartHistory;
+
+    
+    private DatabaseReference historyDb;
+    private ValueEventListener historyListener;
+    private String currentFilter = "harian";
 
     @Nullable
     @Override
@@ -44,6 +64,8 @@ public class GraphFragment extends Fragment {
         tvLabelKelembapan = view.findViewById(R.id.tvLabelKelembapan);
         tvAvgKelembapan = view.findViewById(R.id.tvAvgKelembapan);
 
+        historyDb = FirebaseDatabase.getInstance().getReference("history").child("GH-001");
+
         setupLineChart();
 
         if (btnHarian != null) {
@@ -57,17 +79,33 @@ public class GraphFragment extends Fragment {
         selectHarian();
     }
 
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        removeHistoryListener();
+    }
+
+    private void removeHistoryListener() {
+        if (historyDb != null && historyListener != null) {
+            historyDb.removeEventListener(historyListener);
+            historyListener = null;
+        }
+    }
+
     private void setupLineChart() {
         if (lineChartHistory == null) return;
         
         lineChartHistory.getDescription().setEnabled(false);
         lineChartHistory.getLegend().setEnabled(false);
         lineChartHistory.setExtraOffsets(10f, 20f, 10f, 10f);
+        
+        // Aktifkan Fitur Responsif & Scroll
         lineChartHistory.setTouchEnabled(true);
         lineChartHistory.setDragEnabled(true);
         lineChartHistory.setScaleXEnabled(true);
         lineChartHistory.setScaleYEnabled(false);
         lineChartHistory.setPinchZoom(false);
+        lineChartHistory.setDoubleTapToZoomEnabled(true);
 
         YAxis yAxis = lineChartHistory.getAxisLeft();
         yAxis.setAxisMinimum(0f);
@@ -77,10 +115,7 @@ public class GraphFragment extends Fragment {
         yAxis.setDrawAxisLine(false);
         yAxis.setGridColor(Color.parseColor("#E0E0E0"));
         yAxis.setValueFormatter(new ValueFormatter() {
-            @Override
-            public String getFormattedValue(float value) {
-                return (int) value + "%";
-            }
+            @Override public String getFormattedValue(float value) { return (int) value + "%"; }
         });
 
         lineChartHistory.getAxisRight().setEnabled(false);
@@ -90,11 +125,14 @@ public class GraphFragment extends Fragment {
         xAxis.setDrawGridLines(true);
         xAxis.setGridColor(Color.parseColor("#E0E0E0"));
         xAxis.setDrawAxisLine(false);
+        xAxis.setGranularity(1f); // Grid setiap 1 jam
+        xAxis.setGranularityEnabled(true);
         xAxis.setYOffset(10f);
     }
 
     private void selectHarian() {
         if (!isAdded()) return;
+        currentFilter = "harian";
         
         btnHarian.setBackgroundResource(R.drawable.bg_filter_selected);
         btnHarian.setTextColor(Color.WHITE);
@@ -103,11 +141,12 @@ public class GraphFragment extends Fragment {
         btnMingguan.setTextColor(ContextCompat.getColor(requireContext(), R.color.green_secondary));
 
         tvLabelKelembapan.setText("Data Sensor Kelembapan (Harian)");
-        updateCharts("harian");
+        fetchDataFromFirebase();
     }
 
     private void selectMingguan() {
         if (!isAdded()) return;
+        currentFilter = "mingguan";
 
         btnMingguan.setBackgroundResource(R.drawable.bg_filter_selected);
         btnMingguan.setTextColor(Color.WHITE);
@@ -116,68 +155,168 @@ public class GraphFragment extends Fragment {
         btnHarian.setTextColor(ContextCompat.getColor(requireContext(), R.color.green_secondary));
 
         tvLabelKelembapan.setText("Data Sensor Kelembapan (Mingguan)");
-        updateCharts("mingguan");
+        fetchDataFromFirebase();
     }
 
-    private void updateCharts(String filter) {
-        if (lineChartHistory == null) return;
+    private void fetchDataFromFirebase() {
+        removeHistoryListener();
 
-        List<Entry> entries = new ArrayList<>();
-        final String[] labels;
-
-        if (filter.equals("harian")) {
-            labels = new String[]{"00.00", "04.00", "08.00", "12.00", "16.00", "20.00", "00.00"};
-            float[] values = {65f, 70f, 55f, 60f, 75f, 68f, 65f}; // Dummy data
-            for (int i = 0; i < values.length; i++) {
-                entries.add(new Entry(i * 4f, values[i]));
-            }
-            
-            XAxis xAxis = lineChartHistory.getXAxis();
-            xAxis.setAxisMinimum(0f);
-            xAxis.setAxisMaximum(24f);
-            xAxis.setGranularity(4f);
-            xAxis.setLabelCount(7, true);
-            xAxis.setValueFormatter(new ValueFormatter() {
-                @Override
-                public String getFormattedValue(float value) {
-                    int index = (int) (value / 4f);
-                    if (index >= 0 && index < labels.length) return labels[index];
-                    return "";
-                }
-            });
-            lineChartHistory.setVisibleXRangeMaximum(12f);
-            tvAvgKelembapan.setText("Rata-rata : 65%");
-            
+        DatabaseReference targetRef;
+        if (currentFilter.equals("harian")) {
+            targetRef = historyDb.child("hourly");
         } else {
-            labels = new String[]{"Senin", "Selasa", "Rabu", "Kamis", "Jum'at", "Sabtu", "Ahad"};
-            float[] values = {67f, 36f, 67f, 48f, 68f, 94f, 62f}; // Dummy data
-            for (int i = 0; i < values.length; i++) {
-                entries.add(new Entry(i, values[i]));
-            }
-
-            XAxis xAxis = lineChartHistory.getXAxis();
-            xAxis.setAxisMinimum(0f);
-            xAxis.setAxisMaximum(6f);
-            xAxis.setGranularity(1f);
-            xAxis.setLabelCount(7, true);
-            xAxis.setValueFormatter(new ValueFormatter() {
-                @Override
-                public String getFormattedValue(float value) {
-                    int index = (int) value;
-                    if (index >= 0 && index < labels.length) return labels[index];
-                    return "";
-                }
-            });
-            lineChartHistory.setVisibleXRangeMaximum(4f);
-            tvAvgKelembapan.setText("Rata-rata : 63%");
+            targetRef = historyDb.child("daily");
         }
 
+        historyListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (!isAdded()) return;
+                
+                SimpleDateFormat sdfDate = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+                SimpleDateFormat sdfMonth = new SimpleDateFormat("yyyy-MM", Locale.getDefault());
+                String today = sdfDate.format(new Date());
+                String currentMonth = sdfMonth.format(new Date());
+
+                List<Entry> entries = new ArrayList<>();
+                float totalHumidity = 0;
+                int count = 0;
+
+                if (currentFilter.equals("harian")) {
+                    DataSnapshot todaySnapshot = snapshot.child(today);
+                    if (todaySnapshot.exists()) {
+                        // Grouping data by hour to calculate average per hour
+                        TreeMap<Integer, List<Float>> hourlyGroups = new TreeMap<>();
+                        for (DataSnapshot hourSnapshot : todaySnapshot.getChildren()) {
+                            try {
+                                String timeKey = hourSnapshot.getKey(); // "HH:mm"
+                                Float humidity = hourSnapshot.child("humidity").getValue(Float.class);
+                                if (timeKey != null && humidity != null) {
+                                    int hour = Integer.parseInt(timeKey.split(":")[0]);
+                                    if (!hourlyGroups.containsKey(hour)) {
+                                        hourlyGroups.put(hour, new ArrayList<>());
+                                    }
+                                    hourlyGroups.get(hour).add(humidity);
+                                    totalHumidity += humidity;
+                                    count++;
+                                }
+                            } catch (Exception e) {
+                                Log.e(TAG, "Error parsing hourly group: " + e.getMessage());
+                            }
+                        }
+
+                        // Create entries from averaged hourly data
+                        for (Map.Entry<Integer, List<Float>> entry : hourlyGroups.entrySet()) {
+                            float sum = 0;
+                            for (float val : entry.getValue()) sum += val;
+                            float avg = sum / entry.getValue().size();
+                            entries.add(new Entry(entry.getKey(), avg));
+                        }
+                    }
+                    updateHarianChart(entries);
+                } else {
+                    DataSnapshot monthSnapshot = snapshot.child(currentMonth);
+                    // Sort by day using TreeMap
+                    TreeMap<Integer, Float> dailyData = new TreeMap<>();
+                    if (monthSnapshot.exists()) {
+                        for (DataSnapshot daySnapshot : monthSnapshot.getChildren()) {
+                            try {
+                                String dateKey = daySnapshot.getKey(); // "2026-06-18"
+                                Float avgHumidity = daySnapshot.child("avgHumidity").getValue(Float.class);
+                                if (dateKey != null && avgHumidity != null) {
+                                    String[] parts = dateKey.split("-");
+                                    int day = Integer.parseInt(parts[2]);
+                                    dailyData.put(day, avgHumidity);
+                                    totalHumidity += avgHumidity;
+                                    count++;
+                                }
+                            } catch (Exception e) {
+                                Log.e(TAG, "Error parsing daily: " + e.getMessage());
+                            }
+                        }
+                    }
+                    
+                    for (Map.Entry<Integer, Float> entry : dailyData.entrySet()) {
+                        entries.add(new Entry(entry.getKey(), entry.getValue()));
+                    }
+                    updateMingguanChart(entries);
+                }
+
+                if (count > 0) {
+                    int avg = Math.round(totalHumidity / count);
+                    tvAvgKelembapan.setText("Rata-rata : " + avg + "%");
+                } else {
+                    tvAvgKelembapan.setText("Rata-rata : --");
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Log.e(TAG, "Database error: " + error.getMessage());
+            }
+        };
+        targetRef.addValueEventListener(historyListener);
+    }
+
+    private void updateHarianChart(List<Entry> entries) {
+        if (lineChartHistory == null) return;
+
+        XAxis xAxis = lineChartHistory.getXAxis();
+        xAxis.setAxisMinimum(0f);
+        xAxis.setAxisMaximum(24f);
+        xAxis.setLabelCount(9, false); // Menampilkan label yang pas (00, 03, 06, dst)
+        xAxis.setValueFormatter(new ValueFormatter() {
+            @Override
+            public String getFormattedValue(float value) {
+                return String.format("%02d.00", (int) value % 24);
+            }
+        });
+        
+        applyChartData(entries);
+        
+        // Batasi tampilan hanya 6-8 jam agar bisa di-scroll secara horizontal
+        lineChartHistory.setVisibleXRangeMaximum(8f); 
+        
+        if (!entries.isEmpty()) {
+            // Geser ke data terbaru
+            lineChartHistory.moveViewToX(entries.get(entries.size() - 1).getX());
+        }
+    }
+
+    private void updateMingguanChart(List<Entry> entries) {
+        if (lineChartHistory == null) return;
+
+        XAxis xAxis = lineChartHistory.getXAxis();
+        xAxis.setGranularity(1f);
+        xAxis.setLabelCount(7, false);
+        
+        // Find min and max days to set axis range
+        if (!entries.isEmpty()) {
+            float minX = entries.get(0).getX();
+            float maxX = entries.get(entries.size() - 1).getX();
+            xAxis.setAxisMinimum(minX - 0.5f);
+            xAxis.setAxisMaximum(maxX + 0.5f);
+        }
+
+        xAxis.setValueFormatter(new ValueFormatter() {
+            @Override
+            public String getFormattedValue(float value) {
+                return String.valueOf((int) value);
+            }
+        });
+
+        applyChartData(entries);
+        lineChartHistory.setVisibleXRangeMaximum(7f);
+    }
+
+    private void applyChartData(List<Entry> entries) {
         LineDataSet dataSet = new LineDataSet(entries, "Kelembapan");
         dataSet.setMode(LineDataSet.Mode.CUBIC_BEZIER);
         dataSet.setColor(Color.parseColor("#1D9E75"));
         dataSet.setLineWidth(2.5f);
         dataSet.setDrawCircles(true);
         dataSet.setCircleColor(Color.parseColor("#1D9E75"));
+        dataSet.setCircleRadius(4f);
         dataSet.setDrawValues(false);
         dataSet.setDrawFilled(true);
         dataSet.setFillColor(Color.parseColor("#1D9E75"));
@@ -187,5 +326,10 @@ public class GraphFragment extends Fragment {
         lineChartHistory.setData(data);
         lineChartHistory.notifyDataSetChanged();
         lineChartHistory.invalidate();
+    }
+
+    // Menghapus updateCharts lama karena sudah diganti dengan logika Firebase
+    private void updateCharts(String filter) {
+        // Method ini tidak lagi digunakan secara langsung
     }
 }
