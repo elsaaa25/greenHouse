@@ -23,6 +23,7 @@ import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.Query;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -32,13 +33,13 @@ import java.util.Locale;
 public class NotifikasiFragment extends Fragment {
 
     private static final String TAG = "NotifikasiFragment";
-    
+
     private RecyclerView rvNotifikasi;
     private ProgressBar pbNotif;
     private TextView tvEmptyNotif;
     private NotificationAdapter adapter;
     private List<Notification> notificationList = new ArrayList<>();
-    
+
     private FirebaseFirestore db;
     private FirebaseAuth auth;
     private ListenerRegistration notificationListener;
@@ -69,12 +70,17 @@ public class NotifikasiFragment extends Fragment {
     }
 
     private void observeNotifications() {
-        if (auth.getCurrentUser() == null) return;
-        
+        if (auth.getCurrentUser() == null) {
+            Log.e(TAG, "User tidak login");
+            return;
+        }
+
         if (pbNotif != null) pbNotif.setVisibility(View.VISIBLE);
-        
+
         String uid = auth.getCurrentUser().getUid();
         DocumentReference userRef = db.collection("users").document(uid);
+
+        Log.d(TAG, "Memulai observe untuk User ID: " + uid);
 
         // Fetch notifications for this user, ordered by newest first
         notificationListener = db.collection("notifications")
@@ -84,22 +90,40 @@ public class NotifikasiFragment extends Fragment {
                     if (pbNotif != null) pbNotif.setVisibility(View.GONE);
 
                     if (e != null) {
-                        Log.w(TAG, "Listen failed.", e);
+                        Log.e(TAG, "Listen failed. Kemungkinan besar perlu Create Index Firestore.", e);
                         return;
                     }
 
                     if (snapshots != null) {
                         notificationList.clear();
-                        for (com.google.firebase.firestore.QueryDocumentSnapshot doc : snapshots) {
-                            Notification notification = doc.toObject(Notification.class);
-                            notificationList.add(notification);
+
+                        // LOG DEBUG: Cek jumlah data yang datang dari Cloud
+                        Log.d(TAG, "Snapshot diterima! Jumlah dokumen di Cloud: " + snapshots.size());
+
+                        for (QueryDocumentSnapshot doc : snapshots) {
+                            try {
+                                Notification notification = doc.toObject(Notification.class);
+
+                                // PENTING: ID dokumen harus diset manual agar bisa diupdate isRead-nya
+                                notification.setId(doc.getId());
+
+                                notificationList.add(notification);
+                                Log.d(TAG, "Berhasil memuat notif: " + notification.getTitle() + " [ID: " + doc.getId() + "]");
+                            } catch (Exception ex) {
+                                Log.e(TAG, "Gagal konversi dokumen ke objek Notification. Periksa Model class Anda!", ex);
+                            }
                         }
+
                         adapter.notifyDataSetChanged();
-                        
+
                         // Handle empty state
                         if (tvEmptyNotif != null) {
                             tvEmptyNotif.setVisibility(notificationList.isEmpty() ? View.VISIBLE : View.GONE);
                         }
+
+                        Log.d(TAG, "Total data di List Adapter: " + notificationList.size());
+                    } else {
+                        Log.d(TAG, "Snapshots null");
                     }
                 });
     }
@@ -131,61 +155,51 @@ public class NotifikasiFragment extends Fragment {
             Notification item = list.get(position);
             holder.tvJudul.setText(item.getTitle());
             holder.tvPesan.setText(item.getMessage());
-            
+
             if (item.getCreatedAt() != null) {
                 holder.tvWaktu.setText(sdf.format(item.getCreatedAt().toDate()));
             }
 
-            // Logic to set icon based on notification type
-            int iconRes;
-            int iconBg;
-            
+            // Logic Icon berdasarkan Type (Case-insensitive & support contains)
+            int iconRes = R.drawable.ic_notif;
+            int iconBg = R.drawable.bg_verified_rounded;
+
             String type = item.getType() != null ? item.getType().toUpperCase() : "";
-            switch (type) {
-                case "LOW HUMIDITY":
-                case "LOW_HUMIDITY":
-                case "HIGH HUMIDITY":
-                case "HIGH_HUMIDITY":
-                    iconRes = R.drawable.ic_humidity;
-                    iconBg = R.drawable.bg_orange_rounded;
-                    break;
-                case "PUMP AUTO ON":
-                case "PUMP_AUTO_ON":
-                case "PUMP ON":
-                case "PUMP_ON":
-                    iconRes = R.drawable.ic_pump;
-                    iconBg = R.drawable.bg_orange_rounded;
-                    break;
-                case "LAMP ON":
-                case "LAMP_ON":
-                    iconRes = R.drawable.ic_light;
-                    iconBg = R.drawable.bg_orange_rounded;
-                    break;
-                case "DEVICE ONLINE":
-                case "DEVICE_ONLINE":
-                    iconRes = R.drawable.ic_verified;
-                    iconBg = R.drawable.bg_verified_rounded;
-                    break;
-                default:
-                    iconRes = R.drawable.ic_notif;
-                    iconBg = R.drawable.bg_verified_rounded;
-                    break;
+
+            if (type.contains("HUMIDITY")) {
+                iconRes = R.drawable.ic_humidity;
+                iconBg = R.drawable.bg_orange_rounded;
+            } else if (type.contains("PUMP")) {
+                iconRes = R.drawable.ic_pump;
+                iconBg = R.drawable.bg_orange_rounded;
+            } else if (type.contains("LAMP")) {
+                iconRes = R.drawable.ic_light;
+                iconBg = R.drawable.bg_orange_rounded;
+            } else if (type.contains("ONLINE") || type.contains("DEVICE")) {
+                iconRes = R.drawable.ic_verified;
+                iconBg = R.drawable.bg_verified_rounded;
             }
-            
+
             holder.ivIcon.setImageResource(iconRes);
             holder.ivIcon.setBackgroundResource(iconBg);
 
-            // Highlight unread notifications
+            // Perubahan warna background jika BELUM dibaca
             if (!item.isRead()) {
-                holder.container.setBackgroundResource(R.drawable.bg_notif_warning);
+                holder.container.setBackgroundResource(R.drawable.bg_notif_warning); // Kuning terang
             } else {
-                holder.container.setBackgroundResource(R.drawable.bg_notif_default);
+                holder.container.setBackgroundResource(android.R.color.transparent); // Transparan jika sudah dibaca
             }
-            
+
             // Mark as read on click
             holder.itemView.setOnClickListener(v -> {
                 if (!item.isRead() && item.getId() != null) {
-                    db.collection("notifications").document(item.getId()).update("isRead", true);
+                    db.collection("notifications").document(item.getId())
+                            .update("isRead", true)
+                            .addOnSuccessListener(aVoid -> {
+                                item.setRead(true);
+                                notifyItemChanged(position);
+                            })
+                            .addOnFailureListener(err -> Log.e(TAG, "Gagal update status baca", err));
                 }
             });
         }
