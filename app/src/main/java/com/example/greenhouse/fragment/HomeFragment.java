@@ -137,11 +137,10 @@ public class HomeFragment extends Fragment {
     private void updateOfflineStatus() {
         if (tvStatusAlat != null) {
             tvStatusAlat.setText("OFFLINE");
-            tvStatusAlat.setTextColor(Color.RED);
         }
         if (tvStatus != null) {
-            tvStatus.setText("Perangkat Offline");
-            tvStatus.setBackgroundColor(Color.GRAY);
+            tvStatus.setText("Monitoring Nonaktif");
+            tvStatus.setBackgroundResource(R.drawable.bg_status_watering);
         }
     }
 
@@ -300,33 +299,44 @@ public class HomeFragment extends Fragment {
     }
 
     private void integrasiRTDBHistory() {
-        // Mendapatkan tanggal hari ini (format YYYY-MM-DD sesuai JSON)
-        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault());
-        String today = sdf.format(new java.util.Date());
-
         rtdbHistoryListener = new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if (!isAdded()) return;
+                
+                // Mendapatkan tanggal hari ini secara dinamis agar tidak reset saat berganti hari
+                java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault());
+                String today = sdf.format(new java.util.Date());
+
                 List<Entry> entries = new ArrayList<>();
-                for (DataSnapshot hourSnapshot : snapshot.child(today).getChildren()) {
-                    try {
-                        String timeKey = hourSnapshot.getKey(); // e.g. "00:00"
-                        Float humidity = hourSnapshot.child("humidity").getValue(Float.class);
-                        if (timeKey != null && humidity != null) {
-                            String[] parts = timeKey.split(":");
-                            float hour = Float.parseFloat(parts[0]);
-                            float minute = Float.parseFloat(parts[1]);
-                            float xValue = hour + (minute / 60f);
-                            entries.add(new Entry(xValue, humidity));
+                DataSnapshot todaySnapshot = snapshot.child(today);
+                
+                if (todaySnapshot.exists()) {
+                    for (DataSnapshot hourSnapshot : todaySnapshot.getChildren()) {
+                        try {
+                            String timeKey = hourSnapshot.getKey(); // e.g. "00:00"
+                            Float humidity = hourSnapshot.child("humidity").getValue(Float.class);
+                            if (timeKey != null && humidity != null) {
+                                String[] parts = timeKey.split(":");
+                                float hour = Float.parseFloat(parts[0]);
+                                float minute = Float.parseFloat(parts[1]);
+                                float xValue = hour + (minute / 60f);
+                                entries.add(new Entry(xValue, humidity));
+                            }
+                        } catch (Exception e) {
+                            Log.e(TAG, "Error parsing history: " + e.getMessage());
                         }
-                    } catch (Exception e) {
-                        Log.e(TAG, "Error parsing history: " + e.getMessage());
                     }
                 }
-                if (!entries.isEmpty()) {
-                    updateChartWithHistory(entries);
-                }
+
+                // Update chart dengan data history (meskipun kosong, agar chart ter-reset di hari baru)
+                updateChartWithHistory(entries);
+                
+                // Pindahkan view ke jam sekarang agar grafik akurat
+                java.util.Calendar calendar = java.util.Calendar.getInstance();
+                float currentHour = calendar.get(java.util.Calendar.HOUR_OF_DAY) + (calendar.get(java.util.Calendar.MINUTE) / 60f);
+                lineChart.setVisibleXRangeMaximum(1f); // Pastikan zoom detail aktif
+                lineChart.moveViewToX(currentHour);
             }
             @Override public void onCancelled(@NonNull DatabaseError error) {}
         };
@@ -349,7 +359,6 @@ public class HomeFragment extends Fragment {
         if (tvStatusAlat != null) {
             if (liveData.isOnline()) {
                 tvStatusAlat.setText("ONLINE");
-                tvStatusAlat.setTextColor(Color.parseColor("#1D9E75")); // Hijau
             } else {
                 updateOfflineStatus();
             }
@@ -408,7 +417,9 @@ public class HomeFragment extends Fragment {
             dataSet.setMode(LineDataSet.Mode.CUBIC_BEZIER);
             dataSet.setColor(Color.parseColor("#1D9E75"));
             dataSet.setLineWidth(2.5f);
-            dataSet.setDrawCircles(false);
+            dataSet.setDrawCircles(true); // Aktifkan lingkaran agar titik data terlihat akurat
+            dataSet.setCircleColor(Color.parseColor("#1D9E75"));
+            dataSet.setCircleRadius(3f);
             dataSet.setDrawValues(false);
             dataSet.setDrawFilled(true);
             dataSet.setFillColor(Color.parseColor("#1D9E75"));
@@ -495,16 +506,26 @@ public class HomeFragment extends Fragment {
         lineChart.getDescription().setEnabled(false);
         lineChart.getLegend().setEnabled(false);
         lineChart.setExtraOffsets(10f, 40f, 10f, 20f);
+        
+        // Horizontal Scroll & Responsiveness
+        lineChart.setTouchEnabled(true);
+        lineChart.setDragEnabled(true);
+        lineChart.setScaleXEnabled(true);
+        lineChart.setScaleYEnabled(false);
+        lineChart.setPinchZoom(false);
+        lineChart.setDoubleTapToZoomEnabled(true);
+
         YAxis yAxis = lineChart.getAxisLeft();
-        yAxis.setAxisMinimum(40f);
+        yAxis.setAxisMinimum(0f);
         yAxis.setAxisMaximum(100f);
         yAxis.setLabelCount(6, false);
-        yAxis.setGranularity(5f);
+        yAxis.setGranularity(20f);
         yAxis.setDrawAxisLine(false);
         yAxis.setGridColor(Color.parseColor("#E0E0E0"));
         yAxis.setValueFormatter(new ValueFormatter() {
             @Override public String getFormattedValue(float value) { return (int) value + "%"; }
         });
+
         XAxis xAxis = lineChart.getXAxis();
         xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
         xAxis.setDrawGridLines(true);
@@ -512,24 +533,21 @@ public class HomeFragment extends Fragment {
         xAxis.setDrawAxisLine(false);
         xAxis.setAxisMinimum(0f);
         xAxis.setAxisMaximum(24f);
-        xAxis.setGranularity(4f); // Interval grid 4 jam
+        xAxis.setGranularity(5f / 60f); // Label per 5 menit
         xAxis.setGranularityEnabled(true);
-        xAxis.setLabelCount(7, true); // Menampilkan label 0, 4, 8, 12, 16, 20, 24
         xAxis.setValueFormatter(new ValueFormatter() {
             @Override
             public String getFormattedValue(float value) {
-                int hour = (int) value % 24;
-                return String.format("%02d.00", hour);
+                int hour = (int) value;
+                int minute = Math.round((value - hour) * 60);
+                if (minute >= 60) { hour++; minute = 0; }
+                return String.format("%02d:%02d", hour % 24, minute);
             }
         });
         lineChart.getAxisRight().setEnabled(false);
         
-        // Horizontal Scroll & Gap Settings
-        lineChart.setDragEnabled(true);
-        lineChart.setScaleXEnabled(true);
-        lineChart.setScaleYEnabled(false);
-        lineChart.setPinchZoom(false);
-        lineChart.setVisibleXRangeMaximum(12f); // Menampilkan 12 jam agar label 4 jam sekali memiliki ruang yang cukup
+        // Tampilkan rentang 1 jam agar detail menit terlihat dan bisa digeser
+        lineChart.setVisibleXRangeMaximum(1f); 
 
         updateLimitLines();
     }
@@ -695,8 +713,8 @@ public class HomeFragment extends Fragment {
                 lineChart.setData(data);
             }
 
-            // Jika hari berganti (xValue baru lebih kecil dari xValue terakhir), bersihkan data lama
-            if (data.getEntryCount() > 0 && xValue < data.getXMax()) {
+            // Jika hari berganti (xValue baru sangat kecil dibandingkan XMax yang sudah mencapai akhir hari)
+            if (data.getEntryCount() > 0 && xValue < 1.0f && data.getXMax() > 23.0f) {
                 data.getDataSetByIndex(0).clear();
             }
 
@@ -704,8 +722,8 @@ public class HomeFragment extends Fragment {
             data.notifyDataChanged();
             lineChart.notifyDataSetChanged();
 
-            // Set tampilan agar lebih lega dan bisa digeser
-            lineChart.setVisibleXRangeMaximum(12f);
+            // Set tampilan agar lebih detail dan bisa digeser
+            lineChart.setVisibleXRangeMaximum(1f);
             lineChart.moveViewToX(xValue);
             lineChart.invalidate();
         } catch (Exception e) {
