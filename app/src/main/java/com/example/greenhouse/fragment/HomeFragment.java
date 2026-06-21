@@ -816,6 +816,12 @@ public class HomeFragment extends Fragment {
         if (switchLampu != null) {
             switchLampu.setOnCheckedChangeListener((buttonView, isChecked) -> {
                 if (isUpdatingFromSource) return;
+
+                // PERBAIKAN: Ubah teks status secara instan di UI
+                if (tvLampuStatus != null) {
+                    tvLampuStatus.setText(isChecked ? "ON" : "OFF");
+                }
+
                 controlDb.child("lampManualState").setValue(isChecked);
                 controlDb.child("updatedAt").setValue(System.currentTimeMillis());
             });
@@ -825,54 +831,51 @@ public class HomeFragment extends Fragment {
         if (switchPompa != null) {
             switchPompa.setOnCheckedChangeListener((buttonView, isChecked) -> {
                 if (isUpdatingFromSource) return;
+
+                // PERBAIKAN: Ubah teks status secara instan di UI
+                if (tvPompaStatus != null) {
+                    tvPompaStatus.setText(isChecked ? "ON" : "OFF");
+                }
+
                 controlDb.child("pumpManualState").setValue(isChecked);
                 controlDb.child("updatedAt").setValue(System.currentTimeMillis());
             });
         }
 
-        // --- Switch Mode AUTO Lampu (FOKUS DI SINI) ---
+        // --- Switch Mode AUTO Lampu ---
         if (switchLampuAuto != null) {
             switchLampuAuto.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                // Flag isUpdatingFromSource mencegah loop jika data datang dari DB
                 if (isUpdatingFromSource) return;
 
                 String mode = isChecked ? "AUTO" : "MANUAL";
-
-                // Ganti Teks Label Secara Real-time
                 if (tvLampuModeLabel != null) {
                     tvLampuModeLabel.setText(isChecked ? "Otomatis" : "Manual");
                 }
 
-                // Jika Otomatis aktif, biasanya Switch Manual kita nonaktifkan agar tidak bentrok
                 if (switchLampu != null) {
                     switchLampu.setEnabled(!isChecked);
                 }
 
-                // Kirim ke Realtime Database & Firestore
                 controlDb.child("lampMode").setValue(mode);
                 controlDb.child("updatedAt").setValue(System.currentTimeMillis());
                 updateModeInDatabase("lampMode", mode);
             });
         }
 
-        // --- Switch Mode AUTO Pompa (FOKUS DI SINI) ---
+        // --- Switch Mode AUTO Pompa ---
         if (switchPompaAuto != null) {
             switchPompaAuto.setOnCheckedChangeListener((buttonView, isChecked) -> {
                 if (isUpdatingFromSource) return;
 
                 String mode = isChecked ? "AUTO" : "MANUAL";
-
-                // Ganti Teks Label Secara Real-time
                 if (tvPompaModeLabel != null) {
                     tvPompaModeLabel.setText(isChecked ? "Otomatis" : "Manual");
                 }
 
-                // Nonaktifkan switch manual jika mode otomatis aktif
                 if (switchPompa != null) {
                     switchPompa.setEnabled(!isChecked);
                 }
 
-                // Kirim ke Realtime Database & Firestore
                 controlDb.child("pumpMode").setValue(mode);
                 controlDb.child("updatedAt").setValue(System.currentTimeMillis());
                 updateModeInDatabase("pumpMode", mode);
